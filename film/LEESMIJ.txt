@@ -1,0 +1,7 @@
+Zet hier het filmpje dat start als de code goed is.
+
+Standaard zoekt het codescherm naar: onthulling.mp4
+Een andere naam? Pas dan "film" aan in kluis/instellingen.js.
+
+Gebruik bij voorkeur MP4 (H.264 video, AAC geluid). Dat speelt af in Chrome, Safari en Edge.
+Filmbestanden gaan niet mee naar GitHub (ze staan in .gitignore), omdat GitHub geen bestanden boven 100 MB accepteert.

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#030409">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Waar gaan we heen?</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='10' width='52' height='44' rx='8' fill='%23030409' stroke='%23ffb547' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='10' fill='none' stroke='%23ff2e4d' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Fraunces:ital,opsz,wght@1,9..144,800;1,9..144,900&family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="kluis.css">
+</head>
+<body data-fase="invoer">
+  <canvas id="ruimte" class="ruimte" aria-hidden="true"></canvas>
+  <div class="laag-scan" aria-hidden="true"></div>
+  <div class="laag-ruis" aria-hidden="true"></div>
+  <div class="laag-vignet" aria-hidden="true"></div>
+  <div class="laag-flits" id="flits" aria-hidden="true"></div>
+  <div class="laag-vonken" id="vonken" aria-hidden="true"></div>
+
+  <!-- HUD-hoeken met telemetrie -->
+  <div class="hud" aria-hidden="true">
+    <span class="hoek lb"></span><span class="hoek rb"></span><span class="hoek lo"></span><span class="hoek ro"></span>
+    <div class="telemetrie links">
+      <span>SIGNAAL <b id="tSignaal">98.2</b>%</span>
+      <span>KLUIS <b id="tKluis">VERGRENDELD</b></span>
+      <span>POGING <b id="tPoging">1</b></span>
+    </div>
+    <div class="telemetrie rechts">
+      <span>HARTSLAG <b id="tHart">72</b> BPM</span>
+      <span>SPANNING <b id="tSpanning">12</b>%</span>
+      <span><b id="tKlok">00:00:00</b></span>
+    </div>
+  </div>
+
+  <div class="knoppen">
+    <button type="button" class="rond" id="geluidKnop" aria-pressed="true" aria-label="Geluid uit">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="vol" d="M4 9h4l5-4v14l-5-4H4z"/><path class="golf" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="uit" d="M16 9l6 6M22 9l-6 6"/></svg>
+    </button>
+    <button type="button" class="rond" id="schermKnop" aria-label="Volledig scherm">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
+
+  <main>
+    <!-- ============ 1. Invoer ============ -->
+    <section class="fase" id="f-invoer" aria-labelledby="titel">
+      <div class="radar" aria-hidden="true"><span></span><span></span><span></span><i></i></div>
+      <p class="boven">Negen vrienden · één reis · zeven stukjes</p>
+      <h1 class="titel" id="titel" data-tekst="Waar gaan we heen?">Waar gaan we heen?</h1>
+      <p class="sub">Vul de code uit de zeven enveloppen in.</p>
+
+      <div class="paneel" id="paneel">
+        <span class="paneel-label">Coördinaten</span>
+        <div class="regel-naam">Breedte</div>
+        <div class="regel" id="regelBreedte"></div>
+        <div class="regel-naam">Lengte</div>
+        <div class="regel" id="regelLengte"></div>
+      </div>
+
+      <div class="bediening">
+        <div class="toetsen" id="toetsen" role="group" aria-label="Cijfers">
+          <button type="button" data-cijfer="1">1</button><button type="button" data-cijfer="2">2</button><button type="button" data-cijfer="3">3</button>
+          <button type="button" data-cijfer="4">4</button><button type="button" data-cijfer="5">5</button><button type="button" data-cijfer="6">6</button>
+          <button type="button" data-cijfer="7">7</button><button type="button" data-cijfer="8">8</button><button type="button" data-cijfer="9">9</button>
+          <button type="button" class="neutraal" id="wisAlles" aria-label="Alles wissen">Wis</button>
+          <button type="button" data-cijfer="0">0</button>
+          <button type="button" class="neutraal" id="terugToets" aria-label="Laatste cijfer wissen">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11v12H9l-6-6z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg>
+          </button>
+        </div>
+
+        <div class="ontgrendel-wrap">
+          <button type="button" class="ontgrendel" id="ontgrendel" disabled aria-describedby="ontgrendelHint">
+            <svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54"/><circle class="vulling" id="ringVulling" cx="60" cy="60" r="54"/></svg>
+            <span class="ontgrendel-tekst"><b>Ontgrendel</b><small id="ontgrendelSub">Nog 11 cijfers</small></span>
+          </button>
+          <p class="hint" id="ontgrendelHint">Houd de knop ingedrukt om de code te versturen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. Aftellen ============ -->
+    <section class="fase" id="f-aftellen" aria-live="off">
+      <div class="lint boven-lint" aria-hidden="true"><div>WAARSCHUWING · KLUIS WORDT GEOPEND · NIET WEGGAAN · WAARSCHUWING · KLUIS WORDT GEOPEND · NIET WEGGAAN · WAARSCHUWING · KLUIS WORDT GEOPEND · NIET WEGGAAN · </div></div>
+      <div class="aftel-indeling">
+        <div class="controles" aria-hidden="true">
+          <p class="kolomkop">Fragmenten</p>
+          <ol id="controles"></ol>
+        </div>
+
+        <div class="klok">
+          <svg class="klok-ring" viewBox="0 0 200 200" aria-hidden="true">
+            <circle cx="100" cy="100" r="92"/>
+            <circle class="klok-vulling" id="klokVulling" cx="100" cy="100" r="92"/>
+            <g class="klok-streepjes" id="klokStreepjes"></g>
+          </svg>
+          <div class="getal" id="getal" data-tekst="15">15</div>
+          <p class="klok-code" id="klokCode"></p>
+        </div>
+
+        <div class="feed" aria-hidden="true">
+          <p class="kolomkop">Systeem</p>
+          <ul id="feed"></ul>
+        </div>
+      </div>
+
+      <div class="energie" id="energie">
+        <p class="energie-kop" id="energieKop">Geef energie! Tik zo snel als je kunt</p>
+        <div class="energie-balk"><span id="energieVulling"></span></div>
+        <p class="energie-teller"><b id="tikTeller">0</b> tikken</p>
+      </div>
+      <div class="lint onder-lint" aria-hidden="true"><div>ALARM · ALARM · CODE WORDT GECONTROLEERD · ALARM · ALARM · CODE WORDT GECONTROLEERD · ALARM · ALARM · CODE WORDT GECONTROLEERD · </div></div>
+      <p class="sr-only" id="aftelStatus" aria-live="assertive"></p>
+    </section>
+
+    <!-- ============ 3a. Mislukt ============ -->
+    <section class="fase" id="f-mislukt" aria-labelledby="misluktTitel">
+      <p class="boven rood">Toegang geweigerd</p>
+      <h2 class="uitslag rood glitch" id="misluktTitel" data-tekst="NIET GERED">NIET GERED</h2>
+      <p class="uitslag-tekst" id="foutTekst"></p>
+      <button type="button" class="knop rood-knop" id="opnieuw">Probeer het opnieuw</button>
+    </section>
+
+    <!-- ============ 3b. Gered ============ -->
+    <section class="fase" id="f-gered" aria-labelledby="geredTitel">
+      <p class="boven goud">Toegang verleend</p>
+      <h2 class="uitslag goud" id="geredTitel">GERED!</h2>
+      <p class="uitslag-tekst">De kluis is open. De bestemming wordt geladen.</p>
+      <div class="laden"><span id="ladenVulling"></span></div>
+      <p class="laden-tekst" id="ladenTekst">Film laden</p>
+    </section>
+
+    <!-- ============ 4. Film ============ -->
+    <section class="fase" id="f-film" aria-label="De film">
+      <video id="film" playsinline preload="none"></video>
+      <button type="button" class="knop goud-knop film-start" id="filmStart" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+        Start de film
+      </button>
+      <div class="film-fout" id="filmFout" hidden>
+        <h2>De film is niet gevonden</h2>
+        <p>Zet het filmpje in de map <code>kluis/film/</code> met de naam uit <code>instellingen.js</code>. Nu gezocht naar: <code id="filmPad"></code></p>
+      </div>
+      <div class="film-balk" id="filmBalk">
+        <button type="button" class="rond" id="filmPauze" aria-label="Pauze"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="pauze" d="M7 5h3v14H7zM14 5h3v14h-3z"/><path class="speel" d="M7 4l13 8-13 8z"/></svg></button>
+        <div class="film-voortgang"><span id="filmVoortgang"></span></div>
+        <button type="button" class="rond" id="filmOpnieuw" aria-label="Opnieuw afspelen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg></button>
+      </div>
+    </section>
+  </main>
+
+  <script src="sha256.js"></script>
+  <script src="instellingen.js"></script>
+  <script src="kluis.js"></script>
+</body>
+</html>
