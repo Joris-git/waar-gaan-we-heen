@@ -5,7 +5,7 @@ window.KLUIS = {
 
   // De film, versleuteld met de code. Zo staat de link nergens leesbaar.
   // Instellen of wijzigen: node tools/kluis-instellen.mjs "12.3456, -7.8901" "https://youtu.be/..."
-  filmGeheim: '',
+  filmGeheim: '2UhhHo8wFiU2vfBp1dFJfEg39IDxU2PaZw==',
 
   // Reserve als filmGeheim leeg is: een bestand in de map film/ (alleen voor lokaal spelen).
   film: 'film/onthulling.mp4',
