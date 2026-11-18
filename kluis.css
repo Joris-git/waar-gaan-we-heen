@@ -315,3 +315,23 @@ body[data-fase="mislukt"] .ruimte { filter: hue-rotate(-60deg) saturate(2) brigh
   .laag-ruis, .radar i, .lint div { animation: none !important; }
   body.schud main, body.schud .hud { animation: none !important; }
 }
+
+/* ============ Kaart ============ */
+body[data-fase="kaart"] #f-kaart { display: flex; }
+#f-kaart { padding: 0; background: #000; animation: faseIn 1.2s var(--uit); }
+#f-kaart.weg { opacity: 0; transition: opacity 1.2s ease; }
+#kaart { position: absolute; inset: 0; background: #02040a; }
+body[data-fase="kaart"] .laag-scan { opacity: .25; }
+.kaart-kop { position: absolute; z-index: 500; top: max(28px, env(safe-area-inset-top)); left: 0; right: 0; text-align: center; pointer-events: none; }
+.kaart-coord { margin: 8px 0 0; font-family: var(--mono); font-weight: 800; font-size: clamp(24px, 5vw, 52px); letter-spacing: .06em; color: #fff; text-shadow: 0 0 24px rgba(255, 181, 71, .9), 0 2px 8px #000; }
+#kaartBoven { text-shadow: 0 2px 8px #000; }
+#kaartBoven.gevonden { color: var(--groen); animation: plop .5s var(--veer); }
+.kaart-verder { position: absolute; z-index: 500; right: 18px; bottom: max(28px, env(safe-area-inset-bottom)); margin: 0; min-height: 48px; font-size: 15px; opacity: .85; }
+.leaflet-container { background: #02040a; font-family: var(--sans); }
+.leaflet-control-attribution { font-size: 10px; background: rgba(0, 0, 0, .55) !important; color: #9ba7c4 !important; }
+.leaflet-control-attribution a { color: #9ba7c4 !important; }
+.speld { position: relative; width: 56px; height: 72px; }
+.speld svg { width: 56px; height: 72px; filter: drop-shadow(0 12px 12px rgba(0, 0, 0, .6)); animation: speldVal 1.1s var(--veer) both; }
+.speld::after { content: ''; position: absolute; left: 50%; bottom: -4px; width: 18px; height: 9px; margin-left: -9px; border-radius: 50%; border: 3px solid var(--goud); opacity: 0; animation: rimpel 1.6s ease-out 1s infinite; }
+@keyframes speldVal { 0% { transform: translateY(-320px); opacity: 0; } 45% { opacity: 1; } }
+@keyframes rimpel { 0% { opacity: .95; transform: scale(1); } 100% { opacity: 0; transform: scale(8); } }

@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Fraunces:ital,opsz,wght@1,9..144,800;1,9..144,900&family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="kluis.css">
 </head>
 <body data-fase="invoer">
@@ -133,7 +134,17 @@
       <p class="laden-tekst" id="ladenTekst">Film laden</p>
     </section>
 
-    <!-- ============ 4. Film ============ -->
+    <!-- ============ 4. Kaart ============ -->
+    <section class="fase" id="f-kaart" aria-label="De bestemming op de kaart">
+      <div id="kaart"></div>
+      <div class="kaart-kop">
+        <p class="boven goud" id="kaartBoven">Bestemming wordt gezocht</p>
+        <p class="kaart-coord" id="kaartCoord"></p>
+      </div>
+      <button type="button" class="knop goud-knop kaart-verder" id="kaartVerder">Naar de film</button>
+    </section>
+
+    <!-- ============ 5. Film ============ -->
     <section class="fase" id="f-film" aria-label="De film">
       <video id="film" playsinline preload="none"></video>
       <button type="button" class="knop goud-knop film-start" id="filmStart" hidden>
@@ -152,6 +163,7 @@
     </section>
   </main>
 
+  <script src="vendor/leaflet/leaflet.js"></script>
   <script src="sha256.js"></script>
   <script src="instellingen.js"></script>
   <script src="kluis.js"></script>

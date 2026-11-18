@@ -611,10 +611,68 @@
       $('ladenVulling').style.width = (weergave * 100) + '%';
       $('ladenTekst').textContent = fout ? 'Film niet gevonden' : film.readyState >= 3 ? 'Film klaar' : 'Film laden ' + Math.round(weergave * 100) + '%';
       klaar = film.readyState >= 3 || fout || film.error;
-      if (minTijd && (klaar || performance.now() - start > 15000)) { toonFilm(); return; }
+      if (minTijd && (klaar || performance.now() - start > 15000)) { toonKaart(toonFilm); return; }
       setTimeout(check, 120);
     })();
   }
+  // Kaart: vlieg vanuit de hele wereld naar de pin, daarna de film.
+  var kaart = null;
+  function toonKaart(verder) {
+    var lat = parseFloat(cijfers.slice(0, 2).join('') + '.' + cijfers.slice(2, 6).join(''));
+    var lon = -parseFloat(cijfers[6] + '.' + cijfers.slice(7).join(''));
+    if (!window.L || isNaN(lat) || isNaN(lon)) { verder(); return; }
+    var klaar = false;
+    var door = function () {
+      if (klaar) return;
+      klaar = true;
+      stopRiser();
+      $('f-kaart').classList.add('weg');
+      setTimeout(function () { $('f-kaart').classList.remove('weg'); verder(); }, bewegingUit ? 0 : 1200);
+    };
+    zetFase('kaart');
+    $('kaartBoven').textContent = 'Bestemming wordt gezocht';
+    $('kaartBoven').classList.remove('gevonden');
+    $('kaartCoord').textContent = '';
+    if (!kaart) {
+      kaart = L.map('kaart', { zoomControl: false, attributionControl: true, zoomSnap: 0, keyboard: false });
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18, attribution: 'Beelden &copy; Esri, Maxar, Earthstar Geographics'
+      }).addTo(kaart);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+        maxZoom: 18, subdomains: 'abcd', opacity: 0.85, attribution: '&copy; OpenStreetMap, &copy; CARTO'
+      }).addTo(kaart);
+    }
+    kaart.invalidateSize();
+    kaart.setView([30, 0], 2, { animate: false });
+    if (kaart._speld) { kaart.removeLayer(kaart._speld); kaart._speld = null; }
+
+    var vlucht = bewegingUit ? 0.5 : 10;
+    var tekst = codeTekst(), n = 0;
+    (function typ() { if (n > tekst.length || klaar) return; $('kaartCoord').textContent = tekst.slice(0, n++); if (n > 1) klank.tik(); setTimeout(typ, 90); })();
+    setTimeout(function () {
+      if (klaar) return;
+      startRiser(vlucht);
+      kaart.flyTo([lat, lon], 16, { duration: vlucht, easeLinearity: 0.12 });
+      kaart.once('moveend', function () {
+        if (klaar) return;
+        stopRiser(true);
+        kaart._speld = L.marker([lat, lon], {
+          keyboard: false,
+          icon: L.divIcon({
+            className: '', iconSize: [56, 72], iconAnchor: [28, 70],
+            html: '<div class="speld"><svg viewBox="0 0 52 68"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff7a3d"/></linearGradient></defs><path d="M26 3C13.3 3 3 13 3 25.5 3 42 26 65 26 65s23-23 23-39.5C49 13 38.7 3 26 3z" fill="url(#sg)" stroke="#1a1003" stroke-width="3"/><circle cx="26" cy="25" r="8" fill="#1a1003"/></svg></div>'
+          })
+        }).addTo(kaart);
+        $('kaartBoven').textContent = 'Bestemming gevonden';
+        $('kaartBoven').classList.add('gevonden');
+        setTimeout(function () { klank.knal(); tril([60, 40, 120]); vonken(innerWidth / 2, innerHeight / 2, 40); }, 600);
+        setTimeout(door, bewegingUit ? 800 : 4200);
+      });
+    }, bewegingUit ? 100 : 1200);
+    setTimeout(door, (vlucht + 9) * 1000); // vangnet als de kaart niet laadt
+    $('kaartVerder').onclick = door;
+  }
+
   function laadYoutube(id) {
     var start = performance.now();
     (function check() {
@@ -622,7 +680,7 @@
       var p = Math.min(1, (performance.now() - start) / 3600);
       $('ladenVulling').style.width = (p * 100) + '%';
       $('ladenTekst').textContent = p < 1 ? 'Film laden ' + Math.round(p * 100) + '%' : 'Film klaar';
-      if (p >= 1) { toonYoutube(id); return; }
+      if (p >= 1) { toonKaart(function () { toonYoutube(id); }); return; }
       setTimeout(check, 100);
     })();
   }
