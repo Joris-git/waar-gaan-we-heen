@@ -404,3 +404,16 @@ body[data-fase="eind"] #f-eind { display: flex; }
 .sneltoets { position: fixed; inset: 0; z-index: 80; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; background: rgba(3, 4, 9, .82); backdrop-filter: blur(6px); text-align: center; }
 .sneltoets .knop { margin: 0; }
 .sneltoets p { margin: 0; color: var(--zacht); max-width: 36ch; }
+
+.muziek.alleen-audio { padding-left: 14px; }
+.muziek.spotify .muziek-video { width: 300px; aspect-ratio: auto; height: 80px; border-radius: 12px; }
+.muziek.spotify .muziek-video iframe { height: 80px; }
+.muziek-instellen { gap: 14px; }
+.muziek-instellen h2 { margin: 0; font-family: var(--display); font-style: italic; font-size: 34px; }
+.muziek-instellen .huidig { color: var(--goud); font-weight: 600; }
+.muziek-instellen .rij { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.muziek-instellen .knop { margin: 0; }
+.bestand-knop { cursor: pointer; }
+.start-veld { color: var(--zacht); }
+.start-veld input { width: 80px; margin-left: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.4); color: #fff; font: inherit; }
+@media (max-width: 600px) { .muziek.spotify .muziek-video { width: 100%; } .muziek.spotify { flex-wrap: wrap; } }
