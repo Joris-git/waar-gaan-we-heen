@@ -383,6 +383,21 @@ body[data-fase="eind"] #f-eind { display: flex; }
 #f-eind > :last-child { margin-bottom: auto; }
 @media (max-width: 600px) { .eind-punten li { padding: 10px 14px; font-size: 15px; } .eind-punten { gap: 8px; margin-top: 20px; } }
 
+/* Muziek op het eindscherm (YouTube) */
+.muziek { position: relative; z-index: 45; margin: 22px auto 0; display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 16px; background: rgba(8, 11, 22, .85); border: 1px solid rgba(255, 181, 71, .35); backdrop-filter: blur(10px); animation: faseIn .8s var(--uit) 1.5s both; }
+.muziek-video { width: 224px; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: #000; }
+.muziek-video iframe, .muziek-video #muziekSpeler { width: 100%; height: 100%; border: 0; display: block; }
+.muziek-info { display: grid; text-align: left; line-height: 1.2; }
+.muziek-label { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--goud); }
+.muziek-titel { font-weight: 700; }
+.muziek-knop { width: 40px; height: 40px; }
+.muziek-knop svg path { fill: var(--tekst); stroke: none; }
+.muziek.tik { border-color: var(--goud); animation: zoem 1.6s ease-in-out infinite; cursor: pointer; }
+.muziek.tik .muziek-label { animation: puls .7s ease-in-out infinite alternate; }
+.muziek.fout { border-color: rgba(255, 46, 77, .5); }
+.muziek.fout .muziek-label { color: var(--rood); }
+@media (max-width: 600px) { .muziek-video { width: 150px; } }
+
 /* Sneltoets-scherm voor de organisatie */
 .sneltoets { position: fixed; inset: 0; z-index: 80; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; background: rgba(3, 4, 9, .82); backdrop-filter: blur(6px); text-align: center; }
 .sneltoets .knop { margin: 0; }

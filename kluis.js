@@ -841,6 +841,56 @@
     balkTimer = setTimeout(function () { if (!film.ended) $('filmBalk').classList.remove('toon'); }, 2500);
   });
 
+  // ============ Muziek op het eindscherm (YouTube) ============
+  // Reclame kan YouTube zelf ervoor zetten; de speler blijft zichtbaar zodat je die kunt overslaan.
+  var ICOON_PAUZE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';
+  var ICOON_SPEEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>';
+  var muziekSpeler = null;
+  function muziekStatus(st) {
+    var k = $('muziek'), label = k.querySelector('.muziek-label'), titel = k.querySelector('.muziek-titel');
+    k.classList.remove('tik', 'fout', 'uit');
+    $('muziekStop').hidden = false;
+    titel.textContent = (K.eindMuziek && K.eindMuziek.titel) || 'Hangover';
+    if (st === 'laadt') { label.textContent = 'Muziek laadt'; $('muziekStop').innerHTML = ICOON_PAUZE; return; }
+    if (st === 'speelt') { label.textContent = 'Nu speelt'; $('muziekStop').innerHTML = ICOON_PAUZE; $('muziekStop').setAttribute('aria-label', 'Muziek stoppen'); return; }
+    if (st === 'uit') { k.classList.add('uit'); label.textContent = 'Gepauzeerd'; $('muziekStop').innerHTML = ICOON_SPEEL; $('muziekStop').setAttribute('aria-label', 'Muziek weer aanzetten'); return; }
+    if (st === 'tik') { k.classList.add('tik', 'uit'); label.textContent = 'Tik om te starten'; $('muziekStop').innerHTML = ICOON_SPEEL; return; }
+    k.classList.add('fout'); label.textContent = 'Lukt niet hier'; $('muziekStop').hidden = true;
+  }
+  function startMuziek() {
+    var m = K.eindMuziek;
+    if (!m || !m.youtube) return;
+    $('muziek').hidden = false;
+    muziekStatus('laadt');
+    laadYtApi(function () {
+      if (muziekSpeler) { try { muziekSpeler.seekTo(m.start || 0); muziekSpeler.playVideo(); } catch (e) { /* */ } return; }
+      muziekSpeler = new YT.Player('muziekSpeler', {
+        host: 'https://www.youtube-nocookie.com',
+        videoId: m.youtube, width: '100%', height: '100%',
+        playerVars: { autoplay: 1, start: m.start || 0, playsinline: 1, rel: 0, modestbranding: 1, controls: 1 },
+        events: {
+          onReady: function (e) { try { e.target.unMute(); e.target.setVolume(m.volume == null ? 70 : m.volume); e.target.playVideo(); } catch (x) { /* */ } },
+          onStateChange: function (e) { if (e.data === 1) muziekStatus('speelt'); else if (e.data === 2) muziekStatus('uit'); },
+          onError: function () { muziekStatus('fout'); }
+        }
+      });
+      // Blokkeert de browser het automatisch afspelen, dan vragen we om een tik.
+      setTimeout(function () {
+        try { var st = muziekSpeler.getPlayerState ? muziekSpeler.getPlayerState() : -1; if (st === -1 || st === 5) muziekStatus('tik'); } catch (e) { /* */ }
+      }, 4000);
+    }, function () { muziekStatus('fout'); });
+  }
+  function speelMuziek() { try { muziekSpeler.unMute(); muziekSpeler.playVideo(); } catch (e) { /* */ } }
+  function stopMuziek() { try { if (muziekSpeler) muziekSpeler.pauseVideo(); } catch (e) { /* */ } if (!$('muziek').hidden) muziekStatus('uit'); }
+  $('muziek').addEventListener('click', function (e) {
+    if (e.target.closest('#muziekStop') || !$('muziek').classList.contains('tik')) return;
+    speelMuziek();
+  });
+  $('muziekStop').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if ($('muziek').classList.contains('uit')) speelMuziek(); else stopMuziek();
+  });
+
   // ============ Eindscherm ============
   function toonEind() {
     if (document.body.dataset.fase === 'eind') return;
@@ -868,6 +918,7 @@
     doelSnelheid = 0.25; intensiteit = 0.15; kleurRood = 0;
     droneNaar(0.0001, 200, 40, 0.6); // geen brom op het eindscherm
     flits('goud'); klank.zacht(); tril([60, 40, 120]);
+    startMuziek();
     var salvo = function (k) {
       if (document.body.dataset.fase !== 'eind' || k > 6) return;
       vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 34);
@@ -876,6 +927,7 @@
     salvo(0);
   }
   $('eindOpnieuw').addEventListener('click', function () {
+    stopMuziek();
     var bron = filmBron();
     if (bron && bron.youtube) { $('ytKader').classList.remove('zichtbaar'); toonYoutube(bron.youtube); try { ytSpeler.seekTo(0); ytSpeler.playVideo(); } catch (e) { /* */ } }
     else { toonFilm(); }
