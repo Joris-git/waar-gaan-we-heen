@@ -16,9 +16,6 @@ window.KLUIS = {
 
   // Muziek op het eindscherm (YouTube). start = seconde waarop het nummer begint, volume 0 t/m 100.
   // Zet youtube op '' om geen muziek te spelen.
-  // Muziek op het eindscherm. start = seconde waarop hij begint, volume 0 t/m 100.
-  eindMuziek: { bestand: 'muziek/eindmuziek.mp3', titel: "Klis en z'n gore kop", start: 0, volume: 80 },
-
   // Rondvlucht over de kaart voordat de pin valt. De eerste plek is het vertrekpunt.
   route: [
     { naam: 'Amsterdam', lat: 52.3676, lon: 4.9041 },

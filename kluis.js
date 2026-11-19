@@ -327,7 +327,6 @@
     if (knop.disabled || houdStart) return;
     audio();
     ontgrendelFilm();
-    ontgrendelMuziek();
     houdStart = performance.now();
     knop.classList.add('vast');
     startRiser(HOUD / 1000);
@@ -571,7 +570,7 @@
     hart = 72; spanning = goed ? 0 : 99;
     if (goed) {
       zetFase('gered');
-      muziek();
+
       $('tKluis').textContent = 'OPEN';
       flits('goud'); klank.gered(); tril([100, 50, 100, 50, 300]);
       doelSnelheid = 0.9; intensiteit = 0.3;
@@ -842,69 +841,6 @@
     balkTimer = setTimeout(function () { if (!film.ended) $('filmBalk').classList.remove('toon'); }, 2500);
   });
 
-  // ============ Muziek op het eindscherm ============
-  var ICOON_PAUZE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';
-  var ICOON_SPEEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>';
-  var muziekAudio = null;
-  function muziek() {
-    var m = K.eindMuziek || {};
-    if (!m.bestand) return null;
-    if (!muziekAudio) { muziekAudio = new Audio(m.bestand); muziekAudio.preload = 'auto'; }
-    return muziekAudio;
-  }
-  function muziekStatus(st) {
-    var kaartje = $('muziek'), m = K.eindMuziek || {};
-    kaartje.classList.remove('tik', 'uit');
-    kaartje.querySelector('.muziek-titel').textContent = m.titel || 'Muziek';
-    if (st === 'speelt') { kaartje.querySelector('.muziek-label').textContent = 'Nu speelt'; $('muziekStop').innerHTML = ICOON_PAUZE; $('muziekStop').setAttribute('aria-label', 'Muziek stoppen'); return; }
-    kaartje.classList.add('uit');
-    if (st === 'tik') kaartje.classList.add('tik');
-    kaartje.querySelector('.muziek-label').textContent = st === 'tik' ? 'Tik om te starten' : 'Gepauzeerd';
-    $('muziekStop').innerHTML = ICOON_SPEEL; $('muziekStop').setAttribute('aria-label', 'Muziek weer aanzetten');
-  }
-  function speelMuziek(vanafStart) {
-    var a = muziek(), m = K.eindMuziek || {};
-    if (!a) return;
-    $('muziek').hidden = false;
-    var doel = (m.volume == null ? 80 : m.volume) / 100;
-    a.muted = false;
-    if (vanafStart) { try { a.currentTime = m.start || 0; } catch (e) { /* */ } a.volume = 0; }
-    var p = a.play();
-    var fade = function () { if (a.paused) return; if (a.volume < doel - 0.02) { a.volume = Math.min(doel, a.volume + 0.04); setTimeout(fade, 80); } else a.volume = doel; };
-    if (p && p.then) p.then(function () { muziekStatus('speelt'); fade(); }).catch(function () { a.volume = doel; muziekStatus('tik'); });
-    else { muziekStatus('speelt'); fade(); }
-  }
-  var muziekVrij = false;
-  function ontgrendelMuziek() {
-    // Binnen een tik of klik even stil afspelen, dan mag de browser hem later zelf starten.
-    if (muziekVrij || !codeKlopt()) return;
-    var a = muziek();
-    if (!a) return;
-    muziekVrij = true;
-    a.muted = true;
-    var p = a.play();
-    var terug = function () { if (document.body.dataset.fase !== 'eind') { a.pause(); try { a.currentTime = 0; } catch (e) { /* */ } } a.muted = false; };
-    if (p && p.then) p.then(terug).catch(function () { a.muted = false; muziekVrij = false; });
-    else terug();
-  }
-  // Elke tik of klik na de goede code is een kans om de muziek vrij te geven.
-  document.addEventListener('pointerdown', function () { if (!muziekVrij) ontgrendelMuziek(); }, true);
-  document.addEventListener('keydown', function () { if (!muziekVrij) ontgrendelMuziek(); }, true);
-  // Geblokkeerd? Dan start één tik ergens op het eindscherm de muziek.
-  $('f-eind').addEventListener('pointerdown', function (e) {
-    if ($('muziek').classList.contains('tik') && !e.target.closest('#muziekStop')) speelMuziek(false);
-  });
-  function stopMuziek() { if (muziekAudio) muziekAudio.pause(); muziekStatus('uit'); }
-  function startMuziek() { speelMuziek(true); }
-  $('muziek').addEventListener('click', function (e) {
-    if (e.target.closest('#muziekStop') || !$('muziek').classList.contains('uit')) return;
-    speelMuziek(false);
-  });
-  $('muziekStop').addEventListener('click', function (e) {
-    e.stopPropagation(); // anders zet de klik op het kaartje de muziek meteen weer aan
-    if (muziekAudio && !muziekAudio.paused) stopMuziek(); else speelMuziek(false);
-  });
-
   // ============ Eindscherm ============
   function toonEind() {
     if (document.body.dataset.fase === 'eind') return;
@@ -930,9 +866,8 @@
     zetFase('eind');
     $('tKluis').textContent = 'OPEN';
     doelSnelheid = 0.25; intensiteit = 0.15; kleurRood = 0;
-    droneNaar(0.0001, 200, 40, 0.6); // geen brom onder de muziek
+    droneNaar(0.0001, 200, 40, 0.6); // geen brom op het eindscherm
     flits('goud'); klank.zacht(); tril([60, 40, 120]);
-    startMuziek();
     var salvo = function (k) {
       if (document.body.dataset.fase !== 'eind' || k > 6) return;
       vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 34);
@@ -941,7 +876,6 @@
     salvo(0);
   }
   $('eindOpnieuw').addEventListener('click', function () {
-    stopMuziek();
     var bron = filmBron();
     if (bron && bron.youtube) { $('ytKader').classList.remove('zichtbaar'); toonYoutube(bron.youtube); try { ytSpeler.seekTo(0); ytSpeler.playVideo(); } catch (e) { /* */ } }
     else { toonFilm(); }
