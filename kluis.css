@@ -393,3 +393,9 @@ body[data-fase="eind"] #f-eind { display: flex; }
 .muziek-knop { width: 40px; height: 40px; }
 .muziek-knop svg path { fill: var(--tekst); stroke: none; }
 @media (max-width: 600px) { .muziek { left: 12px; right: 12px; bottom: 12px; } .muziek-video { width: 96px; } }
+
+.muziek.tik { border-color: var(--goud); animation: zoem 1.6s ease-in-out infinite; cursor: pointer; }
+.muziek.tik .muziek-label { animation: puls .7s ease-in-out infinite alternate; }
+.muziek.fout { border-color: rgba(255, 46, 77, .5); }
+.muziek.fout .muziek-label { color: var(--rood); }
+.muziek-titel a { color: var(--goud); }

@@ -656,6 +656,7 @@
       setTimeout(function () { $('f-kaart').classList.remove('weg'); verder(); }, bewegingUit ? 0 : 1200);
     };
     zetFase('kaart');
+    droneNaar(0.0001, 200, 40, 1.5);
     var boven = $('kaartBoven'), groot = $('kaartCoord');
     boven.textContent = 'Bestemming wordt gezocht'; boven.className = 'boven goud';
     groot.textContent = ''; groot.className = 'kaart-coord';
@@ -845,7 +846,8 @@
     var m = K.eindMuziek;
     if (!m || !m.youtube) return;
     $('muziek').hidden = false;
-    $('muziek').classList.remove('uit');
+    $('muziekStop').hidden = false;
+    $('muziek').classList.remove('uit', 'tik', 'fout');
     $('muziekStop').innerHTML = ICOON_PAUZE;
     laadYtApi(function () {
       if (muziekSpeler) { try { muziekSpeler.seekTo(m.start || 0); muziekSpeler.playVideo(); } catch (e) { /* */ } return; }
@@ -855,18 +857,39 @@
         playerVars: { autoplay: 1, start: m.start || 0, playsinline: 1, rel: 0, modestbranding: 1, controls: 0 },
         events: {
           onReady: function (e) { try { e.target.unMute(); e.target.setVolume(m.volume == null ? 70 : m.volume); e.target.playVideo(); } catch (x) { /* */ } },
-          onError: function () { $('muziek').hidden = true; }
+          onStateChange: function (e) { if (e.data === 1) muziekStatus('speelt'); },
+          onError: function () { muziekStatus('fout'); }
         }
       });
-    }, function () { $('muziek').hidden = true; });
+      // Start de muziek niet vanzelf (sommige browsers blokkeren dat), dan vragen we om een tik.
+      setTimeout(function () {
+        try { if (muziekSpeler.getPlayerState && muziekSpeler.getPlayerState() !== 1 && !$('muziek').classList.contains('fout')) muziekStatus('tik'); } catch (e) { /* */ }
+      }, 3500);
+    }, function () { muziekStatus('fout'); });
   }
   var ICOON_PAUZE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';
   var ICOON_SPEEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>';
+  function muziekStatus(st) {
+    var kaartje = $('muziek'), label = kaartje.querySelector('.muziek-label'), titel = kaartje.querySelector('.muziek-titel');
+    kaartje.classList.remove('tik', 'fout', 'uit');
+    if (st === 'speelt') { label.textContent = 'Nu speelt'; titel.textContent = 'Hangover'; $('muziekStop').innerHTML = ICOON_PAUZE; return; }
+    if (st === 'tik') { kaartje.classList.add('tik', 'uit'); label.textContent = 'Tik om te starten'; titel.textContent = 'Hangover'; $('muziekStop').innerHTML = ICOON_SPEEL; return; }
+    kaartje.classList.add('fout');
+    label.textContent = 'Lukt niet hier';
+    titel.innerHTML = '<a target="_blank" rel="noopener">Hangover op YouTube</a>';
+    titel.querySelector('a').href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(K.eindMuziek.youtube);
+    $('muziekStop').hidden = true;
+  }
   function stopMuziek() {
     try { if (muziekSpeler) muziekSpeler.pauseVideo(); } catch (e) { /* */ }
     $('muziek').classList.add('uit');
     $('muziekStop').innerHTML = ICOON_SPEEL;
   }
+  $('muziek').addEventListener('click', function (e) {
+    if (!$('muziek').classList.contains('tik') || e.target.closest('#muziekStop')) return;
+    try { muziekSpeler.unMute(); muziekSpeler.playVideo(); } catch (x) { /* */ }
+    muziekStatus('speelt');
+  });
   $('muziekStop').addEventListener('click', function () {
     var uit = $('muziek').classList.contains('uit');
     if (uit) { try { muziekSpeler.playVideo(); } catch (e) { /* */ } $('muziek').classList.remove('uit'); $('muziekStop').innerHTML = ICOON_PAUZE; $('muziekStop').setAttribute('aria-label', 'Muziek stoppen'); }
@@ -898,7 +921,7 @@
     zetFase('eind');
     $('tKluis').textContent = 'OPEN';
     doelSnelheid = 0.25; intensiteit = 0.15; kleurRood = 0;
-    droneNaar(0.04, 1800, 65.4, 2);
+    droneNaar(0.0001, 200, 40, 0.6); // geen brom onder de muziek
     flits('goud'); klank.zacht(); tril([60, 40, 120]);
     startMuziek();
     var salvo = function (k) {
