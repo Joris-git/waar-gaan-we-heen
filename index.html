@@ -147,6 +147,8 @@
     <!-- ============ 5. Film ============ -->
     <section class="fase" id="f-film" aria-label="De film">
       <video id="film" playsinline preload="none"></video>
+      <div class="yt-kader" id="ytKader" hidden><div id="ytSpeler"></div></div>
+      <button type="button" class="knop glas-knop naar-eind" id="naarEind" hidden>Naar het eindscherm</button>
       <button type="button" class="knop goud-knop film-start" id="filmStart" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
         Start de film
@@ -159,6 +161,22 @@
         <button type="button" class="rond" id="filmPauze" aria-label="Pauze"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="pauze" d="M7 5h3v14H7zM14 5h3v14h-3z"/><path class="speel" d="M7 4l13 8-13 8z"/></svg></button>
         <div class="film-voortgang"><span id="filmVoortgang"></span></div>
         <button type="button" class="rond" id="filmOpnieuw" aria-label="Opnieuw afspelen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5"/></svg></button>
+      </div>
+    </section>
+    <!-- ============ 6. Eindscherm ============ -->
+    <section class="fase" id="f-eind" aria-labelledby="eindLand">
+      <p class="boven goud" id="eindBoven">De kluis is open</p>
+      <h2 class="eind-land" id="eindLand"></h2>
+      <p class="eind-regio" id="eindRegio"></p>
+      <p class="eind-datum" id="eindDatum"></p>
+      <ol class="eind-punten" id="eindPunten"></ol>
+      <p class="eind-slot" id="eindSlot"></p>
+      <div class="eind-acties">
+        <button type="button" class="knop goud-knop" id="eindOpnieuw">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+          Film nog een keer
+        </button>
+        <a class="knop glas-knop" id="eindMaps" target="_blank" rel="noopener">Bekijk de plek in Google Maps</a>
       </div>
     </section>
   </main>

@@ -10,6 +10,21 @@ window.KLUIS = {
   // Reserve als filmGeheim leeg is: een bestand in de map film/ (alleen voor lokaal spelen).
   film: 'film/onthulling.mp4',
 
+  // Tekst van het eindscherm, versleuteld met de code.
+  // Instellen: node tools/eindscherm-instellen.mjs "12.3456, -7.8901" eindscherm.json
+  eindGeheim: 'jttoBGkaBpxtFsJr1vk2Z1++7/vosjPd5OPhSZfM0IM3xZ7GAHqwsQwhtO/hPfWeAR2LmXCMoMLRxSfJ0KZ9qWzuJpwELpPm65bVMrm/8zG8a3i6E66VQa226fODc8o/j3aAsbvfuUc556z1aPLqK8MXfRtLs8PMW2BZ1toMk4opOgkcF5jflAeaWsWnfDZvK1unUOgfIjkSpElFW0ZutBkVewBPwy4lGipxtc23evSizCipiqKyi2S23Hp216dbMZt5xCGPT8CAMGRRomvkeBh7CVBZZu457VZKZWie7Ui/3MMP7VXOlOKnh5pwpcwogLD3zkD3yPLtqvfH7yr2q6omX+5AjJEoGnP5krd4bfljKhrOqRRtTLibVC2W/8AAiK+DHij7ilOw/NQ=',
+
+  // Rondvlucht over de kaart voordat de pin valt. De eerste plek is het vertrekpunt.
+  route: [
+    { naam: 'Amsterdam', lat: 52.3676, lon: 4.9041 },
+    { naam: 'Bratislava', lat: 48.1486, lon: 17.1077 },
+    { naam: 'Sofia', lat: 42.6977, lon: 23.3219 },
+    { naam: 'Athene', lat: 37.9838, lon: 23.7275 },
+    { naam: 'Palermo', lat: 38.1157, lon: 13.3615 },
+    { naam: 'Rome', lat: 41.9028, lon: 12.4964 },
+    { naam: 'Londen', lat: 51.5072, lon: -0.1276 }
+  ],
+
   // Hoe lang het aftellen duurt, in seconden.
   aftellen: 15,
 

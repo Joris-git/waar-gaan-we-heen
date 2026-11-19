@@ -615,61 +615,117 @@
       setTimeout(check, 120);
     })();
   }
-  // Kaart: vlieg vanuit de hele wereld naar de pin, daarna de film.
+  // Kaart: een rondvlucht langs Europese hoofdsteden, dan naar de pin, daarna de film.
   var kaart = null;
+  var SPELD = '<div class="speld"><svg viewBox="0 0 52 68"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff7a3d"/></linearGradient></defs><path d="M26 3C13.3 3 3 13 3 25.5 3 42 26 65 26 65s23-23 23-39.5C49 13 38.7 3 26 3z" fill="url(#sg)" stroke="#1a1003" stroke-width="3"/><circle cx="26" cy="25" r="8" fill="#1a1003"/></svg></div>';
+  function maakKaart() {
+    if (kaart) return;
+    kaart = L.map('kaart', { zoomControl: false, attributionControl: true, zoomSnap: 0, keyboard: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false, boxZoom: false });
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18, attribution: 'Beelden &copy; Esri, Maxar, Earthstar Geographics'
+    }).addTo(kaart);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+      maxZoom: 18, subdomains: 'abcd', opacity: 0.85, attribution: '&copy; OpenStreetMap, &copy; CARTO'
+    }).addTo(kaart);
+    kaart._lagen = [];
+  }
+  function laag(l) { l.addTo(kaart); kaart._lagen.push(l); return l; }
+  function doelCoord() {
+    return {
+      lat: parseFloat(cijfers.slice(0, 2).join('') + '.' + cijfers.slice(2, 6).join('')),
+      lon: -parseFloat(cijfers[6] + '.' + cijfers.slice(7).join(''))
+    };
+  }
   function toonKaart(verder) {
-    var lat = parseFloat(cijfers.slice(0, 2).join('') + '.' + cijfers.slice(2, 6).join(''));
-    var lon = -parseFloat(cijfers[6] + '.' + cijfers.slice(7).join(''));
-    if (!window.L || isNaN(lat) || isNaN(lon)) { verder(); return; }
-    var klaar = false;
+    var d = doelCoord();
+    if (!window.L || isNaN(d.lat) || isNaN(d.lon)) { verder(); return; }
+    var klaar = false, kaartTimers = [];
+    var na = function (fn, ms) { kaartTimers.push(setTimeout(fn, bewegingUit ? Math.min(ms, 80) : ms)); };
     var door = function () {
       if (klaar) return;
       klaar = true;
+      kaartTimers.forEach(clearTimeout);
+      try { kaart.stop(); kaart.off('move'); } catch (e) { /* */ }
       stopRiser();
       $('f-kaart').classList.add('weg');
       setTimeout(function () { $('f-kaart').classList.remove('weg'); verder(); }, bewegingUit ? 0 : 1200);
     };
     zetFase('kaart');
-    $('kaartBoven').textContent = 'Bestemming wordt gezocht';
-    $('kaartBoven').classList.remove('gevonden');
-    $('kaartCoord').textContent = '';
-    if (!kaart) {
-      kaart = L.map('kaart', { zoomControl: false, attributionControl: true, zoomSnap: 0, keyboard: false });
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 18, attribution: 'Beelden &copy; Esri, Maxar, Earthstar Geographics'
-      }).addTo(kaart);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
-        maxZoom: 18, subdomains: 'abcd', opacity: 0.85, attribution: '&copy; OpenStreetMap, &copy; CARTO'
-      }).addTo(kaart);
-    }
+    var boven = $('kaartBoven'), groot = $('kaartCoord');
+    boven.textContent = 'Bestemming wordt gezocht'; boven.className = 'boven goud';
+    groot.textContent = ''; groot.className = 'kaart-coord';
+    maakKaart();
+    kaart._lagen.forEach(function (l) { kaart.removeLayer(l); });
+    kaart._lagen = [];
     kaart.invalidateSize();
-    kaart.setView([30, 0], 2, { animate: false });
-    if (kaart._speld) { kaart.removeLayer(kaart._speld); kaart._speld = null; }
 
-    var vlucht = bewegingUit ? 0.5 : 10;
-    var tekst = codeTekst(), n = 0;
-    (function typ() { if (n > tekst.length || klaar) return; $('kaartCoord').textContent = tekst.slice(0, n++); if (n > 1) klank.tik(); setTimeout(typ, 90); })();
-    setTimeout(function () {
+    var route = (K.route || []).filter(function (r) { return isFinite(r.lat) && isFinite(r.lon); });
+    var punten = route.map(function (r) { return [r.lat, r.lon]; }).concat([[d.lat, d.lon]]);
+    var bezocht = [punten[0]];
+    var lijn = laag(L.polyline(bezocht, { color: '#ffb547', weight: 3, opacity: 0.9, dashArray: '2 9', lineCap: 'round', interactive: false }));
+    kaart.setView(punten[0], route.length ? 6.2 : 2, { animate: false });
+    kaart.on('move', function () { lijn.setLatLngs(bezocht.concat([kaart.getCenter()])); });
+
+    var stip = function (naam, vertrek) {
+      return laag(L.marker([0, 0], {
+        keyboard: false, interactive: false,
+        icon: L.divIcon({ className: '', iconSize: [14, 14], iconAnchor: [7, 7], html: '<div class="stip' + (vertrek ? ' vertrek' : '') + '"><span></span></div>' })
+      }));
+    };
+    var zet = function (tekst, cls) { groot.textContent = tekst; groot.className = 'kaart-coord' + (cls ? ' ' + cls : ''); };
+
+    function aankomst(i) {
       if (klaar) return;
-      startRiser(vlucht);
-      kaart.flyTo([lat, lon], 16, { duration: vlucht, easeLinearity: 0.12 });
-      kaart.once('moveend', function () {
-        if (klaar) return;
-        stopRiser(true);
-        kaart._speld = L.marker([lat, lon], {
-          keyboard: false,
-          icon: L.divIcon({
-            className: '', iconSize: [56, 72], iconAnchor: [28, 70],
-            html: '<div class="speld"><svg viewBox="0 0 52 68"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff7a3d"/></linearGradient></defs><path d="M26 3C13.3 3 3 13 3 25.5 3 42 26 65 26 65s23-23 23-39.5C49 13 38.7 3 26 3z" fill="url(#sg)" stroke="#1a1003" stroke-width="3"/><circle cx="26" cy="25" r="8" fill="#1a1003"/></svg></div>'
-          })
-        }).addTo(kaart);
-        $('kaartBoven').textContent = 'Bestemming gevonden';
-        $('kaartBoven').classList.add('gevonden');
-        setTimeout(function () { klank.knal(); tril([60, 40, 120]); vonken(innerWidth / 2, innerHeight / 2, 40); }, 600);
-        setTimeout(door, bewegingUit ? 800 : 4200);
-      });
-    }, bewegingUit ? 100 : 1200);
-    setTimeout(door, (vlucht + 9) * 1000); // vangnet als de kaart niet laadt
+      bezocht.push(punten[i]);
+      lijn.setLatLngs(bezocht);
+      if (i === punten.length - 1) { gevonden(); return; }
+      var r = route[i], m = stip(r.naam, i === 0);
+      m.setLatLng(punten[i]);
+      m.getElement() && (m.getElement().querySelector('span').textContent = r.naam);
+      if (i === 0) {
+        boven.textContent = 'Vertrek';
+        zet(r.naam);
+        klank.tik();
+        na(function () { boven.textContent = 'Bestemming wordt gezocht'; vlieg(i + 1); }, 1800);
+        return;
+      }
+      zet(r.naam + '?', 'vraag');
+      klank.toets(i);
+      na(function () {
+        zet('Nee.', 'nee');
+        klank.weiger();
+        var el = m.getElement();
+        if (el) el.firstChild.classList.add('af');
+      }, 1000);
+      na(function () { vlieg(i + 1); }, 1700);
+    }
+    function vlieg(i) {
+      if (klaar) return;
+      var laatste = i === punten.length - 1;
+      var duur = bewegingUit ? 0.3 : laatste ? 9 : 2.6;
+      if (laatste) { boven.textContent = 'Laatste koers'; zet('...', 'vraag'); startRiser(duur); }
+      else { ruis(0, duur * 0.8, 300, 2500, 0.12); }
+      kaart.once('moveend', function () { aankomst(i); });
+      kaart.flyTo(punten[i], laatste ? 16 : 6.2, { duration: duur, easeLinearity: laatste ? 0.12 : 0.25 });
+    }
+    function gevonden() {
+      stopRiser(true);
+      kaart.off('move');
+      laag(L.marker(punten[punten.length - 1], {
+        keyboard: false, interactive: false,
+        icon: L.divIcon({ className: '', iconSize: [56, 72], iconAnchor: [28, 70], html: SPELD })
+      }));
+      boven.textContent = 'Bestemming gevonden';
+      boven.className = 'boven gevonden';
+      zet(codeTekst(), 'gevonden');
+      na(function () { klank.knal(); tril([60, 40, 120]); vonken(innerWidth / 2, innerHeight / 2, 40); }, 600);
+      na(door, 4500);
+    }
+
+    if (route.length) na(function () { aankomst(0); }, 700);
+    if (!route.length) { kaart.setView([30, 0], 2, { animate: false }); na(function () { vlieg(0); }, 1200); }
+    // Vangnet als de kaart niet laadt of blijft hangen
+    kaartTimers.push(setTimeout(door, (route.length * 4.5 + 9 + 16) * 1000));
     $('kaartVerder').onclick = door;
   }
 
@@ -684,22 +740,74 @@
       setTimeout(check, 100);
     })();
   }
+  // YouTube ingesloten via de IFrame API, zodat we weten wanneer de film klaar is.
+  var ytSpeler = null;
+  function laadYtApi(klaar, mislukt) {
+    if (window.YT && window.YT.Player) { klaar(); return; }
+    var vorige = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function () { if (vorige) vorige(); klaar(); };
+    if (!document.getElementById('ytApi')) {
+      var sc = document.createElement('script');
+      sc.id = 'ytApi'; sc.src = 'https://www.youtube.com/iframe_api'; sc.onerror = mislukt;
+      document.head.appendChild(sc);
+    }
+  }
   function toonYoutube(id) {
     zetFase('film');
     droneNaar(0.0001, 200, 40, 0.5);
     film.hidden = true; $('filmBalk').hidden = true;
+    $('filmFout').hidden = true;
+    var kader = $('ytKader');
+    kader.hidden = false;
+    $('naarEind').hidden = false;
+    setTimeout(function () { kader.classList.add('zichtbaar'); }, 300);
+    var gestart = false;
+    var reserve = setTimeout(function () { if (!gestart) simpelIframe(id); }, 7000);
+    laadYtApi(function () {
+      if (gestart) return;
+      gestart = true; clearTimeout(reserve);
+      if (ytSpeler) { try { ytSpeler.loadVideoById(id); ytSpeler.playVideo(); } catch (e) { /* */ } return; }
+      ytSpeler = new YT.Player('ytSpeler', {
+        host: 'https://www.youtube-nocookie.com',
+        videoId: id, width: '100%', height: '100%',
+        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, fs: 1 },
+        events: {
+          onReady: function (e) { try { e.target.unMute(); e.target.setVolume(100); e.target.playVideo(); } catch (x) { /* */ } },
+          onStateChange: function (e) { if (e.data === 0) toonEind(); },
+          onError: function (e) { ytFout(e.data, id); }
+        }
+      });
+    }, function () { if (!gestart) { gestart = true; clearTimeout(reserve); simpelIframe(id); } });
+  }
+  function simpelIframe(id) {
+    var plek = $('ytSpeler');
+    if (plek.tagName === 'IFRAME') return;
     var f = document.createElement('iframe');
-    f.id = 'ytFilm';
-    f.title = 'De film';
+    f.id = 'ytSpeler'; f.title = 'De film';
     f.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
     f.allowFullscreen = true;
     f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&playsinline=1&rel=0&modestbranding=1';
-    $('f-film').appendChild(f);
-    setTimeout(function () { f.classList.add('zichtbaar'); }, 300);
+    plek.replaceWith(f);
   }
+  function ytFout(code, id) {
+    var h = $('filmFout').querySelector('h2'), p = $('filmFout').querySelector('p');
+    if (code === 101 || code === 150) {
+      h.textContent = 'Deze video mag niet ingesloten worden';
+      p.innerHTML = 'Zet in YouTube Studio bij deze video <b>Insluiten toestaan</b> aan. Tot die tijd kun je hem <a id="ytLos" target="_blank" rel="noopener">op YouTube bekijken</a>.';
+    } else {
+      h.textContent = 'De video speelt niet af';
+      p.innerHTML = 'Staat hij op <b>Niet vermeld</b> (niet op Privé)? Je kunt hem ook <a id="ytLos" target="_blank" rel="noopener">op YouTube bekijken</a>.';
+    }
+    $('ytLos').href = 'https://youtu.be/' + encodeURIComponent(id);
+    $('ytKader').hidden = true;
+    $('filmFout').hidden = false;
+  }
+  $('naarEind').addEventListener('click', function () { toonEind(); });
+
   function toonFilm() {
     zetFase('film');
     droneNaar(0.0001, 200, 40, 0.5);
+    $('naarEind').hidden = false;
     if (film.error || !film.currentSrc) { $('filmFout').hidden = false; return; }
     film.currentTime = 0;
     film.muted = false;
@@ -716,7 +824,7 @@
   film.addEventListener('timeupdate', function () { if (film.duration) $('filmVoortgang').style.width = (film.currentTime / film.duration * 100) + '%'; });
   film.addEventListener('play', function () { $('filmPauze').classList.remove('gepauzeerd'); });
   film.addEventListener('pause', function () { $('filmPauze').classList.add('gepauzeerd'); });
-  film.addEventListener('ended', function () { $('filmBalk').classList.add('toon'); });
+  film.addEventListener('ended', function () { toonEind(); });
   $('filmPauze').addEventListener('click', function () { if (film.paused) film.play(); else film.pause(); });
   $('filmOpnieuw').addEventListener('click', function () { film.currentTime = 0; film.play(); });
   var balkTimer;
@@ -724,6 +832,46 @@
     $('filmBalk').classList.add('toon');
     clearTimeout(balkTimer);
     balkTimer = setTimeout(function () { if (!film.ended) $('filmBalk').classList.remove('toon'); }, 2500);
+  });
+
+  // ============ Eindscherm ============
+  function toonEind() {
+    if (document.body.dataset.fase === 'eind') return;
+    try { if (ytSpeler && ytSpeler.pauseVideo) ytSpeler.pauseVideo(); } catch (e) { /* */ }
+    try { film.pause(); } catch (e) { /* */ }
+    var o = K.eindGeheim ? G.ontsleutelJSON(K.eindGeheim, 'eind|' + cijfers.join('')) : null;
+    o = o || { boven: 'De kluis is open', land: 'Gered!', regio: '', datum: '', punten: [], slot: 'Pak je koffer.' };
+    $('eindBoven').textContent = o.boven || 'De kluis is open';
+    $('eindLand').textContent = o.land || '';
+    $('eindRegio').textContent = o.regio || '';
+    $('eindDatum').textContent = o.datum || '';
+    $('eindSlot').textContent = o.slot || '';
+    var ol = $('eindPunten');
+    ol.innerHTML = '';
+    (o.punten || []).forEach(function (t, i) {
+      var li = document.createElement('li');
+      li.textContent = t;
+      li.style.animationDelay = (1.4 + i * 0.22) + 's';
+      ol.appendChild(li);
+    });
+    var c = doelCoord();
+    $('eindMaps').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.lat.toFixed(4) + ',' + c.lon.toFixed(4));
+    zetFase('eind');
+    $('tKluis').textContent = 'OPEN';
+    doelSnelheid = 0.25; intensiteit = 0.15; kleurRood = 0;
+    droneNaar(0.04, 1800, 65.4, 2);
+    flits('goud'); klank.gered(); tril([100, 50, 100, 50, 300]);
+    var salvo = function (k) {
+      if (document.body.dataset.fase !== 'eind' || k > 6) return;
+      vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 34);
+      setTimeout(function () { salvo(k + 1); }, 450 + Math.random() * 500);
+    };
+    salvo(0);
+  }
+  $('eindOpnieuw').addEventListener('click', function () {
+    var bron = filmBron();
+    if (bron && bron.youtube) { $('ytKader').classList.remove('zichtbaar'); toonYoutube(bron.youtube); try { ytSpeler.seekTo(0); ytSpeler.playVideo(); } catch (e) { /* */ } }
+    else { toonFilm(); }
   });
 
   // Eerste interactie zet de achtergrondbrom aan
