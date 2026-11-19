@@ -384,36 +384,19 @@ body[data-fase="eind"] #f-eind { display: flex; }
 @media (max-width: 600px) { .eind-punten li { padding: 10px 14px; font-size: 15px; } .eind-punten { gap: 8px; margin-top: 20px; } }
 
 /* Muziek op het eindscherm */
-.muziek { position: fixed; z-index: 45; left: 18px; bottom: max(18px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 8px; border-radius: 16px; background: rgba(8, 11, 22, .8); border: 1px solid rgba(255, 181, 71, .35); backdrop-filter: blur(10px); animation: faseIn .8s var(--uit) 1.5s both; }
-.muziek-video { width: 128px; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: #000; }
-.muziek-video iframe, .muziek-video #muziekSpeler { width: 100%; height: 100%; border: 0; display: block; }
+.muziek { position: fixed; z-index: 45; left: 18px; bottom: max(18px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 16px; background: rgba(8, 11, 22, .8); border: 1px solid rgba(255, 181, 71, .35); backdrop-filter: blur(10px); animation: faseIn .8s var(--uit) 1.5s both; }
 .muziek-info { display: grid; text-align: left; line-height: 1.2; }
 .muziek-label { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--goud); }
 .muziek-titel { font-weight: 700; }
 .muziek-knop { width: 40px; height: 40px; }
 .muziek-knop svg path { fill: var(--tekst); stroke: none; }
-@media (max-width: 600px) { .muziek { left: 12px; right: 12px; bottom: 12px; } .muziek-video { width: 96px; } }
+@media (max-width: 600px) { .muziek { left: 12px; right: 12px; bottom: 12px; justify-content: space-between; } }
 
 .muziek.tik { border-color: var(--goud); animation: zoem 1.6s ease-in-out infinite; cursor: pointer; }
 .muziek.tik .muziek-label { animation: puls .7s ease-in-out infinite alternate; }
-.muziek.fout { border-color: rgba(255, 46, 77, .5); }
-.muziek.fout .muziek-label { color: var(--rood); }
-.muziek-titel a { color: var(--goud); }
 
 /* Sneltoets-scherm voor de organisatie */
 .sneltoets { position: fixed; inset: 0; z-index: 80; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; background: rgba(3, 4, 9, .82); backdrop-filter: blur(6px); text-align: center; }
 .sneltoets .knop { margin: 0; }
 .sneltoets p { margin: 0; color: var(--zacht); max-width: 36ch; }
 
-.muziek.alleen-audio { padding-left: 14px; }
-.muziek.spotify .muziek-video { width: 300px; aspect-ratio: auto; height: 80px; border-radius: 12px; }
-.muziek.spotify .muziek-video iframe { height: 80px; }
-.muziek-instellen { gap: 14px; }
-.muziek-instellen h2 { margin: 0; font-family: var(--display); font-style: italic; font-size: 34px; }
-.muziek-instellen .huidig { color: var(--goud); font-weight: 600; }
-.muziek-instellen .rij { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.muziek-instellen .knop { margin: 0; }
-.bestand-knop { cursor: pointer; }
-.start-veld { color: var(--zacht); }
-.start-veld input { width: 80px; margin-left: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.4); color: #fff; font: inherit; }
-@media (max-width: 600px) { .muziek.spotify .muziek-video { width: 100%; } .muziek.spotify { flex-wrap: wrap; } }

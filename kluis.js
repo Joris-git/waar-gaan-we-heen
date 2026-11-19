@@ -570,6 +570,7 @@
     hart = 72; spanning = goed ? 0 : 99;
     if (goed) {
       zetFase('gered');
+      muziek();
       $('tKluis').textContent = 'OPEN';
       flits('goud'); klank.gered(); tril([100, 50, 100, 50, 300]);
       doelSnelheid = 0.9; intensiteit = 0.3;
@@ -841,180 +842,46 @@
   });
 
   // ============ Muziek op het eindscherm ============
-  // Volgorde: 1. een eigen bestand dat in deze browser is bewaard (geen reclame),
-  // 2. een Spotify-link, 3. een YouTube-video.
   var ICOON_PAUZE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';
   var ICOON_SPEEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>';
-  var muziekSpeler = null, muziekAudio = null, muziekBron = null;
-
-  // Kleine opslag in de browser (IndexedDB) voor het muziekbestand
-  function db(fn) {
-    try {
-      var req = indexedDB.open('kluis', 1);
-      req.onupgradeneeded = function () { req.result.createObjectStore('bestanden'); };
-      req.onsuccess = function () { fn(req.result); };
-      req.onerror = function () { fn(null); };
-    } catch (e) { fn(null); }
-  }
-  function leesMuziek(klaar) {
-    db(function (d) {
-      if (!d) return klaar(null);
-      try {
-        var r = d.transaction('bestanden').objectStore('bestanden').get('eindmuziek');
-        r.onsuccess = function () { klaar(r.result || null); };
-        r.onerror = function () { klaar(null); };
-      } catch (e) { klaar(null); }
-    });
-  }
-  function bewaarMuziek(waarde, klaar) {
-    db(function (d) {
-      if (!d) return klaar(false);
-      try {
-        var tx = d.transaction('bestanden', 'readwrite');
-        if (waarde) tx.objectStore('bestanden').put(waarde, 'eindmuziek'); else tx.objectStore('bestanden').delete('eindmuziek');
-        tx.oncomplete = function () { klaar(true); };
-        tx.onerror = function () { klaar(false); };
-      } catch (e) { klaar(false); }
-    });
-  }
-  function spotifyId(t) { var m = String(t || '').match(/track[\/:]([A-Za-z0-9]{22})/); return m ? m[1] : (/^[A-Za-z0-9]{22}$/.test(t || '') ? t : null); }
-
-  function kaartjeTekst(label, titel) {
-    $('muziek').querySelector('.muziek-label').textContent = label;
-    $('muziek').querySelector('.muziek-titel').textContent = titel;
+  var muziekAudio = null;
+  function muziek() {
+    var m = K.eindMuziek || {};
+    if (!m.bestand) return null;
+    if (!muziekAudio) { muziekAudio = new Audio(m.bestand); muziekAudio.preload = 'auto'; }
+    return muziekAudio;
   }
   function muziekStatus(st) {
-    var kaartje = $('muziek');
-    kaartje.classList.remove('tik', 'fout', 'uit');
-    $('muziekStop').hidden = false;
-    var titel = (muziekBron && muziekBron.titel) || 'Hangover';
-    if (st === 'speelt') { kaartjeTekst('Nu speelt', titel); $('muziekStop').innerHTML = ICOON_PAUZE; return; }
-    if (st === 'tik') { kaartje.classList.add('tik', 'uit'); kaartjeTekst('Tik om te starten', titel); $('muziekStop').innerHTML = ICOON_SPEEL; return; }
-    kaartje.classList.add('fout');
-    kaartjeTekst('Lukt niet hier', titel);
-    $('muziekStop').hidden = true;
+    var kaartje = $('muziek'), m = K.eindMuziek || {};
+    kaartje.classList.remove('tik', 'uit');
+    kaartje.querySelector('.muziek-titel').textContent = m.titel || 'Muziek';
+    if (st === 'speelt') { kaartje.querySelector('.muziek-label').textContent = 'Nu speelt'; $('muziekStop').innerHTML = ICOON_PAUZE; $('muziekStop').setAttribute('aria-label', 'Muziek stoppen'); return; }
+    kaartje.classList.add('uit');
+    if (st === 'tik') kaartje.classList.add('tik');
+    kaartje.querySelector('.muziek-label').textContent = st === 'tik' ? 'Tik om te starten' : 'Gepauzeerd';
+    $('muziekStop').innerHTML = ICOON_SPEEL; $('muziekStop').setAttribute('aria-label', 'Muziek weer aanzetten');
   }
-  function startMuziek() {
-    var m = K.eindMuziek || {};
-    leesMuziek(function (bestand) {
-      if (document.body.dataset.fase !== 'eind') return;
-      var kaartje = $('muziek'), video = kaartje.querySelector('.muziek-video');
-      if (bestand && bestand.blob) {
-        muziekBron = { soort: 'bestand', titel: bestand.titel || 'Hangover' };
-        kaartje.hidden = false; kaartje.classList.add('alleen-audio'); video.hidden = true;
-        if (!muziekAudio) muziekAudio = new Audio();
-        if (!muziekAudio.dataset || muziekAudio._url !== bestand) {
-          if (muziekAudio.src) URL.revokeObjectURL(muziekAudio.src);
-          muziekAudio.src = URL.createObjectURL(bestand.blob);
-          muziekAudio._url = bestand;
-        }
-        muziekAudio.currentTime = bestand.start || 0;
-        muziekAudio.volume = 0;
-        var doel = (m.volume == null ? 70 : m.volume) / 100;
-        var p = muziekAudio.play();
-        var fade = function () { var v = muziekAudio.volume; if (v < doel - 0.02) { muziekAudio.volume = Math.min(doel, v + 0.04); setTimeout(fade, 80); } };
-        if (p && p.then) p.then(function () { muziekStatus('speelt'); fade(); }).catch(function () { muziekStatus('tik'); muziekAudio.volume = doel; });
-        else { muziekStatus('speelt'); fade(); }
-        return;
-      }
-      var sp = spotifyId(m.spotify);
-      if (sp) {
-        muziekBron = { soort: 'spotify', titel: 'Hangover' };
-        kaartje.hidden = false; kaartje.classList.add('spotify'); video.hidden = false;
-        if (!video.querySelector('iframe.sp')) {
-          video.innerHTML = '';
-          var f = document.createElement('iframe');
-          f.className = 'sp'; f.title = 'Spotify'; f.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
-          f.src = 'https://open.spotify.com/embed/track/' + sp + '?theme=0';
-          video.appendChild(f);
-        }
-        kaartjeTekst('Druk op play', 'Hangover');
-        $('muziekStop').hidden = true;
-        return;
-      }
-      if (!m.youtube) return;
-      muziekBron = { soort: 'youtube', titel: 'Hangover' };
-      kaartje.hidden = false; video.hidden = false;
-      muziekStatus('speelt');
-      laadYtApi(function () {
-        if (muziekSpeler) { try { muziekSpeler.seekTo(m.start || 0); muziekSpeler.playVideo(); } catch (e) { /* */ } return; }
-        muziekSpeler = new YT.Player('muziekSpeler', {
-          host: 'https://www.youtube-nocookie.com',
-          videoId: m.youtube, width: '100%', height: '100%',
-          playerVars: { autoplay: 1, start: m.start || 0, playsinline: 1, rel: 0, modestbranding: 1, controls: 0 },
-          events: {
-            onReady: function (e) { try { e.target.unMute(); e.target.setVolume(m.volume == null ? 70 : m.volume); e.target.playVideo(); } catch (x) { /* */ } },
-            onStateChange: function (e) { if (e.data === 1) muziekStatus('speelt'); },
-            onError: function () { muziekStatus('fout'); }
-          }
-        });
-        setTimeout(function () {
-          try { if (muziekSpeler.getPlayerState && muziekSpeler.getPlayerState() !== 1 && !$('muziek').classList.contains('fout')) muziekStatus('tik'); } catch (e) { /* */ }
-        }, 3500);
-      }, function () { muziekStatus('fout'); });
-    });
+  function speelMuziek(vanafStart) {
+    var a = muziek(), m = K.eindMuziek || {};
+    if (!a) return;
+    $('muziek').hidden = false;
+    var doel = (m.volume == null ? 80 : m.volume) / 100;
+    if (vanafStart) { try { a.currentTime = m.start || 0; } catch (e) { /* */ } a.volume = 0; }
+    var p = a.play();
+    var fade = function () { if (a.paused) return; if (a.volume < doel - 0.02) { a.volume = Math.min(doel, a.volume + 0.04); setTimeout(fade, 80); } else a.volume = doel; };
+    if (p && p.then) p.then(function () { muziekStatus('speelt'); fade(); }).catch(function () { a.volume = doel; muziekStatus('tik'); });
+    else { muziekStatus('speelt'); fade(); }
   }
-  function speelMuziek() {
-    if (!muziekBron) return;
-    if (muziekBron.soort === 'bestand' && muziekAudio) { muziekAudio.play().then(function () { muziekStatus('speelt'); }).catch(function () { muziekStatus('tik'); }); return; }
-    if (muziekBron.soort === 'youtube' && muziekSpeler) { try { muziekSpeler.unMute(); muziekSpeler.playVideo(); } catch (e) { /* */ } muziekStatus('speelt'); }
-  }
-  function stopMuziek() {
-    try { if (muziekAudio) muziekAudio.pause(); } catch (e) { /* */ }
-    try { if (muziekSpeler) muziekSpeler.pauseVideo(); } catch (e) { /* */ }
-    $('muziek').classList.add('uit');
-    $('muziekStop').innerHTML = ICOON_SPEEL;
-  }
+  function stopMuziek() { if (muziekAudio) muziekAudio.pause(); muziekStatus('uit'); }
+  function startMuziek() { speelMuziek(true); }
   $('muziek').addEventListener('click', function (e) {
-    if (!$('muziek').classList.contains('tik') || e.target.closest('#muziekStop')) return;
-    speelMuziek();
+    if (e.target.closest('#muziekStop') || !$('muziek').classList.contains('uit')) return;
+    speelMuziek(false);
   });
-  $('muziekStop').addEventListener('click', function () {
-    if ($('muziek').classList.contains('uit')) { speelMuziek(); $('muziekStop').setAttribute('aria-label', 'Muziek stoppen'); }
-    else { stopMuziek(); $('muziekStop').setAttribute('aria-label', 'Muziek weer aanzetten'); }
+  $('muziekStop').addEventListener('click', function (e) {
+    e.stopPropagation(); // anders zet de klik op het kaartje de muziek meteen weer aan
+    if (muziekAudio && !muziekAudio.paused) stopMuziek(); else speelMuziek(false);
   });
-
-  // Instelscherm voor het muziekbestand: ?naar=muziek
-  function muziekInstellen() {
-    var laag = document.createElement('div');
-    laag.className = 'sneltoets muziek-instellen';
-    laag.innerHTML =
-      '<h2>Muziek voor het eindscherm</h2>' +
-      '<p>Kies een muziekbestand (bijvoorbeeld een mp3 van Hangover). Het blijft alleen in deze browser op dit apparaat staan en wordt nergens heen gestuurd. Doe dit op het apparaat waarop jullie de finale spelen.</p>' +
-      '<p class="huidig" id="mHuidig">Even kijken...</p>' +
-      '<label class="knop goud-knop bestand-knop">Kies bestand<input type="file" accept="audio/*" id="mBestand" hidden></label>' +
-      '<label class="start-veld">Begin bij seconde <input type="number" min="0" step="1" value="0" id="mStart"></label>' +
-      '<div class="rij"><button type="button" class="knop glas-knop" id="mTest">Test</button><button type="button" class="knop glas-knop" id="mWis">Verwijder</button><a class="knop glas-knop" href="?">Klaar</a></div>';
-    document.body.appendChild(laag);
-    var huidig = laag.querySelector('#mHuidig'), test = new Audio();
-    var toon = function () {
-      leesMuziek(function (b) {
-        huidig.textContent = b ? 'Nu bewaard: ' + b.titel + ' (begint bij ' + (b.start || 0) + ' s)' : 'Nog geen bestand bewaard. Het eindscherm gebruikt dan ' + (spotifyId((K.eindMuziek || {}).spotify) ? 'Spotify.' : (K.eindMuziek || {}).youtube ? 'YouTube (met kans op reclame).' : 'geen muziek.');
-        if (b) laag.querySelector('#mStart').value = b.start || 0;
-      });
-    };
-    toon();
-    laag.querySelector('#mBestand').addEventListener('change', function (e) {
-      var f = e.target.files && e.target.files[0];
-      if (!f) return;
-      huidig.textContent = 'Bezig met bewaren...';
-      bewaarMuziek({ blob: f, titel: f.name.replace(/\.[^.]+$/, ''), start: parseInt(laag.querySelector('#mStart').value, 10) || 0 }, function (ok) {
-        if (!ok) huidig.textContent = 'Bewaren lukte niet in deze browser. Probeer Chrome of Safari zonder privévenster.';
-        else toon();
-      });
-    });
-    laag.querySelector('#mStart').addEventListener('change', function (e) {
-      leesMuziek(function (b) { if (b) { b.start = parseInt(e.target.value, 10) || 0; bewaarMuziek(b, toon); } });
-    });
-    laag.querySelector('#mTest').addEventListener('click', function () {
-      leesMuziek(function (b) {
-        if (!b) { huidig.textContent = 'Kies eerst een bestand.'; return; }
-        if (!test.paused) { test.pause(); return; }
-        test.src = URL.createObjectURL(b.blob); test.currentTime = b.start || 0; test.play();
-      });
-    });
-    laag.querySelector('#mWis').addEventListener('click', function () { test.pause(); bewaarMuziek(null, toon); });
-  }
 
   // ============ Eindscherm ============
   function toonEind() {
@@ -1069,7 +936,6 @@
   (function sneltoets() {
     var code = (params.get('code') || '').replace(/\D/g, '');
     var naar = (params.get('naar') || '').toLowerCase();
-    if (naar === 'muziek') { muziekInstellen(); return; }
     if (code.length !== 11) return;
     cijfers = code.split(''); cursor = 10; tekenVakken();
     if (!naar) return;

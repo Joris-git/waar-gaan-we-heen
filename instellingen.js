@@ -16,10 +16,8 @@ window.KLUIS = {
 
   // Muziek op het eindscherm (YouTube). start = seconde waarop het nummer begint, volume 0 t/m 100.
   // Zet youtube op '' om geen muziek te spelen.
-  // Het beste: kies één keer een eigen muziekbestand via ?naar=muziek (geen reclame, start vanzelf).
-  // Zonder bestand: spotify (link of ID van een nummer; start pas na een tik, zonder login 30 seconden)
-  // of youtube (kan reclame tonen). Laat leeg ('') wat je niet wilt gebruiken.
-  eindMuziek: { spotify: '', youtube: '', start: 0, volume: 70 },
+  // Muziek op het eindscherm. start = seconde waarop hij begint, volume 0 t/m 100.
+  eindMuziek: { bestand: 'muziek/eindmuziek.mp3', titel: "Klis en z'n gore kop", start: 0, volume: 80 },
 
   // Rondvlucht over de kaart voordat de pin valt. De eerste plek is het vertrekpunt.
   route: [
