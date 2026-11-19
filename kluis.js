@@ -85,6 +85,11 @@
     knal: function () { ruis(0, 0.6, 6000, 200, 0.9, 'lowpass'); osc('sine', 90, 0, 1.2, 0.9, 30); },
     tap: function (e) { osc('triangle', 500 + e * 9, 0, 0.07, 0.07); },
     overdrive: function () { ruis(0, 0.5, 400, 8000, 0.5); [784, 1047, 1568].forEach(function (f) { osc('square', f, 0, 0.3, 0.04); }); },
+    zacht: function () {
+      ruis(0, 1.2, 800, 5000, 0.08);
+      [523, 659, 784].forEach(function (f, i) { osc('sine', f, i * 0.12, 1.6, 0.05); });
+      [1568, 1976, 2349].forEach(function (f, i) { osc('sine', f, 0.5 + i * 0.1, 0.9, 0.025); });
+    },
     gered: function () {
       klank.knal();
       [[262, 0], [330, 0], [392, 0], [523, 0], [659, .5], [784, .5], [1047, .5]].forEach(function (n) { osc('sawtooth', n[0], 0.15 + n[1], 3.2, 0.05); osc('sine', n[0] * 2, 0.15 + n[1], 3, 0.03); });
@@ -834,6 +839,40 @@
     balkTimer = setTimeout(function () { if (!film.ended) $('filmBalk').classList.remove('toon'); }, 2500);
   });
 
+  // ============ Muziek op het eindscherm ============
+  var muziekSpeler = null;
+  function startMuziek() {
+    var m = K.eindMuziek;
+    if (!m || !m.youtube) return;
+    $('muziek').hidden = false;
+    $('muziek').classList.remove('uit');
+    $('muziekStop').innerHTML = ICOON_PAUZE;
+    laadYtApi(function () {
+      if (muziekSpeler) { try { muziekSpeler.seekTo(m.start || 0); muziekSpeler.playVideo(); } catch (e) { /* */ } return; }
+      muziekSpeler = new YT.Player('muziekSpeler', {
+        host: 'https://www.youtube-nocookie.com',
+        videoId: m.youtube, width: '100%', height: '100%',
+        playerVars: { autoplay: 1, start: m.start || 0, playsinline: 1, rel: 0, modestbranding: 1, controls: 0 },
+        events: {
+          onReady: function (e) { try { e.target.unMute(); e.target.setVolume(m.volume == null ? 70 : m.volume); e.target.playVideo(); } catch (x) { /* */ } },
+          onError: function () { $('muziek').hidden = true; }
+        }
+      });
+    }, function () { $('muziek').hidden = true; });
+  }
+  var ICOON_PAUZE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>';
+  var ICOON_SPEEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>';
+  function stopMuziek() {
+    try { if (muziekSpeler) muziekSpeler.pauseVideo(); } catch (e) { /* */ }
+    $('muziek').classList.add('uit');
+    $('muziekStop').innerHTML = ICOON_SPEEL;
+  }
+  $('muziekStop').addEventListener('click', function () {
+    var uit = $('muziek').classList.contains('uit');
+    if (uit) { try { muziekSpeler.playVideo(); } catch (e) { /* */ } $('muziek').classList.remove('uit'); $('muziekStop').innerHTML = ICOON_PAUZE; $('muziekStop').setAttribute('aria-label', 'Muziek stoppen'); }
+    else { stopMuziek(); $('muziekStop').setAttribute('aria-label', 'Muziek weer aanzetten'); }
+  });
+
   // ============ Eindscherm ============
   function toonEind() {
     if (document.body.dataset.fase === 'eind') return;
@@ -860,7 +899,8 @@
     $('tKluis').textContent = 'OPEN';
     doelSnelheid = 0.25; intensiteit = 0.15; kleurRood = 0;
     droneNaar(0.04, 1800, 65.4, 2);
-    flits('goud'); klank.gered(); tril([100, 50, 100, 50, 300]);
+    flits('goud'); klank.zacht(); tril([60, 40, 120]);
+    startMuziek();
     var salvo = function (k) {
       if (document.body.dataset.fase !== 'eind' || k > 6) return;
       vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 34);
@@ -869,6 +909,7 @@
     salvo(0);
   }
   $('eindOpnieuw').addEventListener('click', function () {
+    stopMuziek();
     var bron = filmBron();
     if (bron && bron.youtube) { $('ytKader').classList.remove('zichtbaar'); toonYoutube(bron.youtube); try { ytSpeler.seekTo(0); ytSpeler.playVideo(); } catch (e) { /* */ } }
     else { toonFilm(); }
