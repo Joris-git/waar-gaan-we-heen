@@ -943,4 +943,34 @@
 
   bouwPaneel();
   tekenVakken();
+
+  // ============ Sneltoetsen voor de organisatie ============
+  // ?code=<11 cijfers>&naar=eind  (of naar=kaart, naar=film, naar=gered, naar=aftellen)
+  (function sneltoets() {
+    var code = (params.get('code') || '').replace(/\D/g, '');
+    var naar = (params.get('naar') || '').toLowerCase();
+    if (code.length !== 11) return;
+    cijfers = code.split(''); cursor = 10; tekenVakken();
+    if (!naar) return;
+    var laag = document.createElement('div');
+    laag.className = 'sneltoets';
+    var knop = document.createElement('button');
+    knop.type = 'button'; knop.className = 'knop goud-knop';
+    knop.textContent = 'Sneltoets: naar ' + naar;
+    var uitleg = document.createElement('p');
+    uitleg.textContent = 'Tik eerst één keer, dan mag de browser geluid en film afspelen.';
+    laag.appendChild(knop); laag.appendChild(uitleg);
+    document.body.appendChild(laag);
+    knop.focus();
+    knop.addEventListener('click', function () {
+      laag.remove();
+      audio();
+      var bron = filmBron();
+      if (naar === 'eind') toonEind();
+      else if (naar === 'film') { if (bron && bron.youtube) toonYoutube(bron.youtube); else uitslag(); }
+      else if (naar === 'kaart') toonKaart(function () { if (bron && bron.youtube) toonYoutube(bron.youtube); else uitslag(); });
+      else if (naar === 'aftellen') startAftellen();
+      else uitslag();
+    });
+  })();
 })();

@@ -399,3 +399,8 @@ body[data-fase="eind"] #f-eind { display: flex; }
 .muziek.fout { border-color: rgba(255, 46, 77, .5); }
 .muziek.fout .muziek-label { color: var(--rood); }
 .muziek-titel a { color: var(--goud); }
+
+/* Sneltoets-scherm voor de organisatie */
+.sneltoets { position: fixed; inset: 0; z-index: 80; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; background: rgba(3, 4, 9, .82); backdrop-filter: blur(6px); text-align: center; }
+.sneltoets .knop { margin: 0; }
+.sneltoets p { margin: 0; color: var(--zacht); max-width: 36ch; }
