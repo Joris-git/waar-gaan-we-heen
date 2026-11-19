@@ -327,6 +327,7 @@
     if (knop.disabled || houdStart) return;
     audio();
     ontgrendelFilm();
+    ontgrendelMuziek();
     houdStart = performance.now();
     knop.classList.add('vast');
     startRiser(HOUD / 1000);
@@ -866,12 +867,33 @@
     if (!a) return;
     $('muziek').hidden = false;
     var doel = (m.volume == null ? 80 : m.volume) / 100;
+    a.muted = false;
     if (vanafStart) { try { a.currentTime = m.start || 0; } catch (e) { /* */ } a.volume = 0; }
     var p = a.play();
     var fade = function () { if (a.paused) return; if (a.volume < doel - 0.02) { a.volume = Math.min(doel, a.volume + 0.04); setTimeout(fade, 80); } else a.volume = doel; };
     if (p && p.then) p.then(function () { muziekStatus('speelt'); fade(); }).catch(function () { a.volume = doel; muziekStatus('tik'); });
     else { muziekStatus('speelt'); fade(); }
   }
+  var muziekVrij = false;
+  function ontgrendelMuziek() {
+    // Binnen een tik of klik even stil afspelen, dan mag de browser hem later zelf starten.
+    if (muziekVrij || !codeKlopt()) return;
+    var a = muziek();
+    if (!a) return;
+    muziekVrij = true;
+    a.muted = true;
+    var p = a.play();
+    var terug = function () { if (document.body.dataset.fase !== 'eind') { a.pause(); try { a.currentTime = 0; } catch (e) { /* */ } } a.muted = false; };
+    if (p && p.then) p.then(terug).catch(function () { a.muted = false; muziekVrij = false; });
+    else terug();
+  }
+  // Elke tik of klik na de goede code is een kans om de muziek vrij te geven.
+  document.addEventListener('pointerdown', function () { if (!muziekVrij) ontgrendelMuziek(); }, true);
+  document.addEventListener('keydown', function () { if (!muziekVrij) ontgrendelMuziek(); }, true);
+  // Geblokkeerd? Dan start één tik ergens op het eindscherm de muziek.
+  $('f-eind').addEventListener('pointerdown', function (e) {
+    if ($('muziek').classList.contains('tik') && !e.target.closest('#muziekStop')) speelMuziek(false);
+  });
   function stopMuziek() { if (muziekAudio) muziekAudio.pause(); muziekStatus('uit'); }
   function startMuziek() { speelMuziek(true); }
   $('muziek').addEventListener('click', function (e) {

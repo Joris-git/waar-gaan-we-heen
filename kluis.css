@@ -400,3 +400,8 @@ body[data-fase="eind"] #f-eind { display: flex; }
 .sneltoets .knop { margin: 0; }
 .sneltoets p { margin: 0; color: var(--zacht); max-width: 36ch; }
 
+
+/* Duidelijke tik-vraag als de browser de muziek tegenhoudt */
+.muziek.tik { left: 50%; right: auto; bottom: max(28px, env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 14px 14px 14px 22px; border-width: 2px; }
+.muziek.tik .muziek-label { font-size: 13px; }
+.muziek.tik .muziek-titel { font-size: 18px; }
