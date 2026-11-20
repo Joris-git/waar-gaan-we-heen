@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Fraunces:ital,opsz,wght@1,9..144,800;1,9..144,900&family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
-  <link rel="stylesheet" href="kluis.css?v=1795159007">
+  <link rel="stylesheet" href="kluis.css?v=1795159923">
 </head>
 <body data-fase="wacht">
   <canvas id="ruimte" class="ruimte" aria-hidden="true"></canvas>
@@ -46,16 +46,20 @@
   </div>
 
   <main>
-    <!-- ============ 1. Invoer ============ -->
     <!-- ============ 0. Wachtscherm ============ -->
     <section class="fase" id="f-wacht" aria-label="Wachtscherm">
-      <div class="wacht-ringen" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-      <button type="button" class="orb" id="orb" aria-label="Er wacht iets">
-        <span class="orb-ring" aria-hidden="true"></span>
-        <svg class="sleutelgat" viewBox="0 0 40 64" aria-hidden="true"><circle cx="20" cy="18" r="13"/><path d="M12 26 6 62h28l-6-36z"/></svg>
+      <p class="kraak-status" id="wachtStatus">Code wordt gekraakt</p>
+      <button type="button" class="kraker" id="orb" aria-label="Er wordt een code gekraakt">
+        <span class="kraak-regel" id="kraakRegel1"></span>
+        <span class="kraak-regel" id="kraakRegel2"></span>
       </button>
-      <p class="fluister" id="fluister" aria-live="polite">Er wacht iets op jullie.</p>
-      <p class="wacht-ruis" id="wachtRuis" aria-hidden="true">SIGNAAL ONBEKEND · ??:??:??</p>
+      <p class="fluister" id="fluister" aria-live="polite">Toegang geweigerd. Nieuwe poging.</p>
+      <div class="kraak-info" aria-hidden="true">
+        <span>Pogingen <b id="kraakPogingen">0</b></span>
+        <span>Snelheid <b id="kraakSnelheid">0</b>/s</span>
+        <span>Looptijd <b id="kraakTijd">00:00:00</b></span>
+      </div>
+      <ul class="kraak-log" id="kraakLog" aria-hidden="true"></ul>
       <form class="wacht-veld" id="wachtVeld" hidden autocomplete="off">
         <label class="sr-only" for="wachtInvoer">Wachtwoord</label>
         <input id="wachtInvoer" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="···">
@@ -63,6 +67,7 @@
       <p class="wacht-open" id="wachtOpen" aria-hidden="true">Toegang</p>
     </section>
 
+    <!-- ============ 1. Invoer ============ -->
     <section class="fase" id="f-invoer" aria-labelledby="titel">
       <div class="radar" aria-hidden="true"><span></span><span></span><span></span><i></i></div>
       <p class="boven">Negen vrienden · één reis · zeven stukjes</p>
@@ -208,8 +213,8 @@
   </main>
 
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="sha256.js?v=1795159007"></script>
-  <script src="instellingen.js?v=1795159007"></script>
-  <script src="kluis.js?v=1795159007"></script>
+  <script src="sha256.js?v=1795159923"></script>
+  <script src="instellingen.js?v=1795159923"></script>
+  <script src="kluis.js?v=1795159923"></script>
 </body>
 </html>
