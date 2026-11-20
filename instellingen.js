@@ -31,6 +31,10 @@ window.KLUIS = {
     { naam: 'Londen', lat: 51.5072, lon: -0.1276 }
   ],
 
+  // Wachtscherm: typ dit wachtwoord om de kluiskraker te starten (alleen de hash staat hier).
+  // Wijzigen: node tools/wachtwoord-instellen.mjs "nieuwwachtwoord". Leeg = geen wachtscherm.
+  wachtwoordHash: '40ff1637c0153f7b167157509de4ab6bb905405d1d04d06823c0985c33a54990',
+
   // Hoe lang het aftellen duurt, in seconden.
   aftellen: 15,
 

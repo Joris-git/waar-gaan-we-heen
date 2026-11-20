@@ -281,6 +281,8 @@
 
   document.addEventListener('keydown', function (e) {
     var fase = document.body.dataset.fase;
+    if (fase === 'wacht') { wachtToets(e); return; }
+    if (fase === 'wachtopen') return;
     if (fase === 'aftellen') { if (e.key !== 'Escape' && !e.repeat) energieTik(null); return; }
     if (fase !== 'invoer') return;
     if (/^\d$/.test(e.key)) {
@@ -941,6 +943,79 @@
 
   // ============ Sneltoetsen voor de organisatie ============
   // ?code=<11 cijfers>&naar=eind  (of naar=kaart, naar=film, naar=gered, naar=aftellen)
+  // ============ Wachtscherm ============
+  // Draait tot het wachtwoord is getypt. Toetsenbord: gewoon typen (onzichtbaar).
+  // Telefoon of tablet: tik 5 keer snel op de bol, dan verschijnt een veld.
+  var wachtBuffer = '', wachtTikken = [], fluisterTimer = null, ruisTimer = null;
+  var FLUISTER = ['Er wacht iets op jullie.', 'Nog niet.', 'Zeven stukjes. Eén slot.', 'Wie heeft de enveloppen?',
+    'Luister. Hoor je het?', 'De kluis slaapt.', 'Bijna.', 'Niet aankomen.', 'Iemand weet het al.'];
+  function wwKlopt(w) { return !!K.wachtwoordHash && G.hash('boysinwonderland|wachtwoord|' + w) === K.wachtwoordHash; }
+  function wachtNorm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, ''); }
+  function orbPuls(cls) { var o = $('orb'); o.classList.remove('hoort', 'nee'); void o.offsetWidth; o.classList.add(cls); }
+  function wachtToets(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Enter') { if (wachtBuffer) { orbPuls('nee'); klank.weiger(); } wachtBuffer = ''; return; }
+    if (e.key === 'Escape') { wachtBuffer = ''; return; }
+    if (!/^[a-zA-Z0-9]$/.test(e.key)) return;
+    audio();
+    wachtBuffer = (wachtBuffer + e.key.toLowerCase()).slice(-40);
+    orbPuls('hoort');
+    osc('sine', 180 + Math.random() * 60, 0, 0.18, 0.05, 120);
+    for (var i = 1; i <= wachtBuffer.length; i++) {
+      if (wwKlopt(wachtBuffer.slice(-i))) { wachtOpen(); return; }
+    }
+  }
+  function wachtOpen() {
+    if (document.body.dataset.fase !== 'wacht') return;
+    clearInterval(fluisterTimer); clearInterval(ruisTimer);
+    try { sessionStorage.setItem('kluis-open', '1'); } catch (e) { /* */ }
+    document.body.dataset.fase = 'wachtopen';
+    $('f-wacht').style.display = 'flex';
+    $('f-wacht').classList.add('open');
+    audio(); klank.knal(); startRiser(1.4); tril([40, 30, 120]);
+    doelSnelheid = 1.6;
+    setTimeout(function () { flits('goud'); stopRiser(true); }, 1300);
+    setTimeout(function () {
+      $('f-wacht').style.display = ''; $('f-wacht').classList.remove('open');
+      doelSnelheid = 0.06;
+      zetFase('invoer'); tekenVakken();
+    }, bewegingUit ? 200 : 1900);
+  }
+  function startWacht() {
+    if (!K.wachtwoordHash) { zetFase('invoer'); return; }
+    doelSnelheid = 0.02;
+    var i = 0, f = $('fluister');
+    fluisterTimer = setInterval(function () {
+      f.classList.add('weg');
+      setTimeout(function () { i = (i + 1) % FLUISTER.length; f.textContent = FLUISTER[i]; f.classList.remove('weg'); }, 1300);
+    }, 6500);
+    var HEXW = '0123456789ABCDEF';
+    ruisTimer = setInterval(function () {
+      var r = function () { return HEXW[(Math.random() * 16) | 0] + HEXW[(Math.random() * 16) | 0]; };
+      $('wachtRuis').textContent = 'SIGNAAL ONBEKEND · ' + r() + ':' + r() + ':' + r();
+    }, 900);
+    // Telefoon/tablet: vijf snelle tikken op de bol tonen het veld
+    $('orb').addEventListener('click', function () {
+      var nu = Date.now();
+      wachtTikken = wachtTikken.filter(function (t) { return nu - t < 2500; }).concat(nu);
+      orbPuls('hoort');
+      if (wachtTikken.length >= 5) { $('wachtVeld').hidden = false; $('wachtInvoer').focus(); wachtTikken = []; }
+    });
+    $('wachtVeld').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var w = wachtNorm($('wachtInvoer').value);
+      if (wwKlopt(w)) { $('wachtInvoer').blur(); wachtOpen(); return; }
+      var v = $('wachtVeld'); v.classList.remove('nee'); void v.offsetWidth; v.classList.add('nee');
+      orbPuls('nee'); klank.weiger(); $('wachtInvoer').value = '';
+    });
+  }
+  (function () {
+    var open = false;
+    try { open = sessionStorage.getItem('kluis-open') === '1'; } catch (e) { /* */ }
+    if (open || params.has('code') || params.has('naar') || params.has('open')) zetFase('invoer');
+    else startWacht();
+  })();
+
   (function sneltoets() {
     var code = (params.get('code') || '').replace(/\D/g, '');
     var naar = (params.get('naar') || '').toLowerCase();
