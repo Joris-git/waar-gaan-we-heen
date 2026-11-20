@@ -12,7 +12,7 @@ window.KLUIS = {
 
   // Tekst van het eindscherm, versleuteld met de code.
   // Instellen: node tools/eindscherm-instellen.mjs "12.3456, -7.8901" eindscherm.json
-  eindGeheim: 'jttoBGkaBpxtFsJr1vk2Z1++7/vosjPd5OPhSZfM0IM3xZ7GAHqwsQwhtO/hPfWeAR2LmXCMoMLRxSfJ0KZ9qWzuJpwELpPm65bVMrm/8zG8a3i6E66VQa226fODc8o/j3aAsbvfuUc556z1aPLqK8MXfRtLs8PMW2BZ1toMk4opOgkcF5jflAeaWsWnfDZvK1unUOgfIjkSpElFW0ZutBkVewBPwy4lGipxtc23evSizCipiqKyi2S23Hp216dbMZt5xCGPT8CAMGRRomvkeBh7CVBZZu457VZKZWie7Ui/3MMP7VXOlOKnh5pwpcwogLD3zkD3yPLtqvfH7yr2q6omX+5AjJEoGnP5krd4bfljKhrOqRRtTLibVC2W/8AAiK+DHij7ilOw/NQ=',
+  eindGeheim: 'jttoBGkaBpxtFsVhkvd6dVOmvfP6+SiNQzrjKNzTwoQ2x8OBI3mjpB4i96/tc7jSF1rW0k/B6JTlziHEjPI0qzirDZwYf8imxZSQf+mt92npRTXzRf6NN7D64b3FL4QtyiDUmL/Or1R7uvLlc/KiaMcXfk0U/9DOIDY/1YxSz889OhdIHYWdtxTIB9e5aSdjYV6nTP0POHQPjBBLDmJltFwGYE4ZgD9wXy00tcv8IBV81yvu3eKFgy//mUxokqpOMYos7iGUUofdeH4UoXjjZg48V1AmLdY49kdAbjrVr0qqz8JEpBKT0Kqem5tisdooyeH7xHv0muLvsrvM/z665/d8RaJChItmM3/4w+w4QPYyHkXO9lp1We6DTF+h/YwGjK+FFDq9gEL7v8elFHHcJihtRShxJnr1bq+NnahUwrLCpPpk5KM5ESDhksXVMMHXS/1WPUvq/9Xz4vDDbuhqtNOQv0+IXRVTN9cSETOUmNU23jE0h1ovLNPps4gE/68hS+gQTv1/l4B+y/9LmhoSrkItguaiC/+oCiG6SV+BseUtw10yGeFZOiwj5sbKJOZW/Qr2qmISzq7gbYJp1Q+4PCqWoFY4Mnil9uy9gazSsWCOqXfP3IaNQkd3PYl/K8CPOuiflQOtAJ4Uu6bOxJ7V5Fkl5uNNGjM8QY6zhVeQVViC9PHYK4jcLYXHIYUePQTItl3iVBYLR83oCcOAMPfgQ9R2yVcAAsor0oAZ3wup3CsKHdG9FVMVQ8zVEuG0LCy9w+H/kruyCw==',
 
   // Muziek op het eindscherm (YouTube). start = seconde waarop het nummer begint, volume 0 t/m 100.
   // Zet youtube op '' om geen muziek te spelen.

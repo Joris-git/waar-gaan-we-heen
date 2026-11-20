@@ -895,12 +895,22 @@
   });
 
   // ============ Eindscherm ============
+  // Scrol mee als iets nieuws onder de rand van het scherm verschijnt (telefoon).
+  function inBeeld(el) {
+    var r = el.getBoundingClientRect();
+    if (r.bottom > innerHeight - 16) el.scrollIntoView({ block: 'end', behavior: bewegingUit ? 'auto' : 'smooth' });
+  }
+  // Eindscherm, stap voor stap: eerst alleen het land, dan de rest.
+  var eindTimers = [];
   function toonEind() {
     if (document.body.dataset.fase === 'eind') return;
     try { if (ytSpeler && ytSpeler.pauseVideo) ytSpeler.pauseVideo(); } catch (e) { /* */ }
     try { film.pause(); } catch (e) { /* */ }
+    eindTimers.forEach(clearTimeout); eindTimers = [];
+    var na = function (fn, ms) { eindTimers.push(setTimeout(fn, bewegingUit ? Math.min(ms, 60) : ms)); };
     var o = K.eindGeheim ? G.ontsleutelJSON(K.eindGeheim, 'eind|' + cijfers.join('')) : null;
     o = o || { boven: 'De kluis is open', land: 'Gered!', regio: '', datum: '', punten: [], slot: 'Pak je koffer.' };
+    var sec = $('f-eind');
     $('eindBoven').textContent = o.boven || 'De kluis is open';
     $('eindLand').textContent = o.land || '';
     $('eindRegio').textContent = o.regio || '';
@@ -908,26 +918,64 @@
     $('eindSlot').textContent = o.slot || '';
     var ol = $('eindPunten');
     ol.innerHTML = '';
-    (o.punten || []).forEach(function (t, i) {
+    (o.punten || []).forEach(function (t) {
       var li = document.createElement('li');
-      li.textContent = t;
-      li.style.animationDelay = (1.4 + i * 0.22) + 's';
+      li.className = 'eind-stap';
+      if (typeof t === 'string') { li.innerHTML = '<span class="punt-wat"></span>'; li.querySelector('.punt-wat').textContent = t; }
+      else {
+        li.innerHTML = '<span class="punt-wanneer"></span><span class="punt-wat"></span>';
+        li.querySelector('.punt-wanneer').textContent = t.wanneer || '';
+        li.querySelector('.punt-wat').textContent = t.wat || '';
+      }
       ol.appendChild(li);
     });
     var c = doelCoord();
     $('eindMaps').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.lat.toFixed(4) + ',' + c.lon.toFixed(4));
+    // Alles verbergen, behalve het land
+    sec.querySelectorAll('.eind-stap').forEach(function (el) { el.classList.remove('zicht'); });
+    $('muziek').hidden = true;
     zetFase('eind');
+    sec.scrollTop = 0;
     $('tKluis').textContent = 'OPEN';
     doelSnelheid = 0.25; intensiteit = 0.15; kleurRood = 0;
     droneNaar(0.0001, 200, 40, 0.6); // geen brom op het eindscherm
+    // Stap 1: alleen het land, groot in het midden
+    var land = $('eindLand');
+    land.classList.remove('in');
+    sec.classList.remove('solo');
+    land.style.setProperty('--dy', '0px');
+    var r = land.getBoundingClientRect();
+    land.style.setProperty('--dy', Math.round(innerHeight / 2 - (r.top + r.height / 2)) + 'px');
+    sec.classList.add('solo');
+    void land.offsetWidth;
+    land.classList.add('in');
     flits('goud'); klank.zacht(); tril([60, 40, 120]);
-    startMuziek();
+    na(function () { vonken(innerWidth / 2, innerHeight / 2, 50); }, 500);
+    // Stap 2: land schuift omhoog, regio en datum verschijnen
+    na(function () { sec.classList.remove('solo'); $('eindBoven').classList.add('zicht'); osc('sine', 392, 0, 0.6, 0.05); }, 2600);
+    na(function () { $('eindRegio').classList.add('zicht'); osc('sine', 523, 0, 0.5, 0.05); }, 3500);
+    na(function () { $('eindDatum').classList.add('zicht'); osc('sine', 659, 0, 0.5, 0.05); }, 4000);
+    // Stap 3: de onderdelen van de reis, één voor één
+    var items = Array.prototype.slice.call(ol.children), t = 4900;
+    items.forEach(function (li, i) {
+      na(function () {
+        li.classList.add('zicht');
+        inBeeld(li);
+        osc('triangle', 700 + i * 60, 0, 0.12, 0.05);
+        var rr = li.getBoundingClientRect();
+        vonken(rr.left + 24, rr.top + rr.height / 2, 8);
+      }, t + i * 850);
+    });
+    t += items.length * 850 + 500;
+    // Stap 4: slotzin, knoppen en muziek
+    na(function () { $('eindSlot').classList.add('zicht'); inBeeld($('eindSlot')); klank.vol(); vonken(innerWidth / 2, innerHeight * 0.75, 40); }, t);
+    na(function () { sec.querySelector('.eind-acties').classList.add('zicht'); startMuziek(); setTimeout(function () { inBeeld($('muziek')); }, 300); }, t + 900);
     var salvo = function (k) {
-      if (document.body.dataset.fase !== 'eind' || k > 6) return;
-      vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 34);
-      setTimeout(function () { salvo(k + 1); }, 450 + Math.random() * 500);
+      if (document.body.dataset.fase !== 'eind' || k > 5) return;
+      vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 30);
+      na(function () { salvo(k + 1); }, 500 + Math.random() * 500);
     };
-    salvo(0);
+    na(function () { salvo(0); }, t + 300);
   }
   $('eindOpnieuw').addEventListener('click', function () {
     stopMuziek();

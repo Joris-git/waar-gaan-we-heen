@@ -455,3 +455,25 @@ body[data-fase="wacht"] .knoppen:hover, body[data-fase="wacht"] .knoppen:focus-w
 .brief-tip { position: absolute; bottom: max(28px, env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--zwak); }
 @media (max-width: 600px) { .brief-regels { gap: 10px; } .brief-alarm { font-size: 10px; letter-spacing: .18em; } }
 @media (prefers-reduced-motion: reduce) { .brief-alarm { animation: none; } }
+
+/* ============ Eindscherm stap voor stap ============ */
+#f-eind .eind-stap { opacity: 0; transform: translateY(16px); transition: opacity .8s var(--uit), transform .8s var(--uit); animation: none; }
+#f-eind .eind-stap.zicht { opacity: 1; transform: none; }
+#f-eind .eind-land { opacity: 0; animation: none; transform: translateY(0) scale(1); transition: transform 1.3s cubic-bezier(.65, 0, .25, 1); }
+#f-eind .eind-land.in { animation: landOpkomst 1.6s var(--uit) forwards; }
+#f-eind.solo .eind-land { transform: translateY(var(--dy, 0px)) scale(1.5); }
+@keyframes landOpkomst { 0% { opacity: 0; letter-spacing: .3em; } 100% { opacity: 1; letter-spacing: -.02em; } }
+#f-eind .eind-regio { animation: none; }
+#f-eind .eind-datum { animation: none; }
+#f-eind .eind-slot { animation: none; font-size: clamp(28px, 5vw, 54px); margin-top: 22px; }
+#f-eind .eind-acties { animation: none; }
+#f-eind .eind-land { font-size: clamp(60px, 13vw, 160px); }
+.eind-punten { width: min(820px, 100%); }
+.eind-punten li { opacity: 0; animation: none; gap: 14px; padding: 10px 16px; }
+.eind-punten li::before { display: none; }
+.eind-punten li.zicht { animation: puntIn .7s var(--veer) forwards; }
+.punt-wanneer { flex: none; min-width: 84px; padding: 4px 8px; border-radius: 8px; background: rgba(255, 181, 71, .14); border: 1px solid rgba(255, 181, 71, .4); font-family: var(--mono); font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--goud); text-align: center; }
+.punt-wat { font-weight: 700; }
+@media (max-width: 600px) { .punt-wanneer { min-width: 72px; font-size: 11px; } .eind-punten li { padding: 9px 12px; } }
+@media (prefers-reduced-motion: reduce) { #f-eind .eind-land { transition: none; } #f-eind.solo .eind-land { transform: none; } }
+@media (min-width: 640px) { .eind-punten li:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; min-width: 50%; } }
