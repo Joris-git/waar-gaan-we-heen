@@ -423,7 +423,7 @@ body[data-fase="wacht"] .knoppen:hover, body[data-fase="wacht"] .knoppen:focus-w
 .kraker.nee { animation: schudNee .45s ease; }
 .fluister { margin: 26px 0 0; min-height: 1.4em; font-family: var(--display); font-style: italic; font-weight: 800; font-size: clamp(20px, 3.4vw, 34px); color: #f4e6cc; text-shadow: 0 0 24px rgba(255, 170, 70, .45); transition: opacity .9s ease, filter .9s ease; }
 .fluister.weg { opacity: 0; filter: blur(8px); }
-.kraak-info { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 26px; margin-top: 22px; font-family: var(--mono); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--zwak); }
+.kraak-info { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 26px; margin-top: 30px; font-family: var(--mono); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--zwak); }
 .kraak-info b { color: var(--cyaan); font-weight: 800; }
 .kraak-log { list-style: none; margin: 18px 0 0; padding: 0; height: 96px; overflow: hidden; display: grid; align-content: end; gap: 2px; font-family: var(--mono); font-size: 12px; color: rgba(160, 175, 205, .55); -webkit-mask: linear-gradient(180deg, transparent, #000 70%); mask: linear-gradient(180deg, transparent, #000 70%); }
 .kraak-log li b { color: var(--rood); font-weight: 800; margin-left: 10px; }

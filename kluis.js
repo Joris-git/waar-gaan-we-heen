@@ -947,8 +947,6 @@
   // Draait tot het wachtwoord is getypt. Toetsenbord: gewoon typen (onzichtbaar).
   // Telefoon of tablet: tik 5 keer snel op de cijfers, dan verschijnt een veld.
   var wachtBuffer = '', wachtTikken = [], wachtTimers = [];
-  var FLUISTER = ['Toegang geweigerd. Nieuwe poging.', 'Code wordt gekraakt.', 'Zeven stukjes ontbreken.',
-    'Zonder de enveloppen lukt het niet.', 'Het systeem raadt. Jullie weten het.', 'Nog even geduld.', 'Bijna. Of toch niet.'];
   var kraakCellen = [], kraakVast = [];
   function wwKlopt(w) { return !!K.wachtwoordHash && G.hash('boysinwonderland|wachtwoord|' + w) === K.wachtwoordHash; }
   function wachtNorm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, ''); }
@@ -1049,12 +1047,6 @@
       var s = Math.floor((Date.now() - begin) / 1000);
       $('kraakTijd').textContent = [s / 3600 | 0, (s / 60 | 0) % 60, s % 60].map(function (x) { return (x < 10 ? '0' : '') + x; }).join(':');
     }, 100));
-    // Fluisterende tekst
-    var f = $('fluister'), k = 0;
-    wachtTimers.push(setInterval(function () {
-      f.classList.add('weg');
-      setTimeout(function () { k = (k + 1) % FLUISTER.length; f.textContent = FLUISTER[k]; f.classList.remove('weg'); }, 900);
-    }, 5500));
     kraakPoging();
     // Telefoon/tablet: vijf snelle tikken tonen het veld
     $('orb').addEventListener('click', function () {
