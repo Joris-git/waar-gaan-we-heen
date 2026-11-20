@@ -88,6 +88,7 @@ body[data-fase="film"] .hud, body[data-fase="film"] .laag-scan, body[data-fase="
 /* ============ Fasen ============ */
 main { position: relative; z-index: 10; height: 100%; }
 .fase { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; padding: max(70px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); text-align: center; overflow-y: auto; }
+body[data-fase="briefing"] #f-briefing,
 body[data-fase="wacht"] #f-wacht,
 body[data-fase="invoer"] #f-invoer,
 body[data-fase="aftellen"] #f-aftellen,
@@ -440,3 +441,17 @@ body[data-fase="wacht"] .knoppen:hover, body[data-fase="wacht"] .knoppen:focus-w
 @keyframes openTekst { 0% { opacity: 0; transform: scale(1.3); } 40% { opacity: 1; transform: none; } 100% { opacity: 1; } }
 @media (max-width: 600px) { .kraak-log { height: 72px; font-size: 11px; } .kraak-info { font-size: 10px; gap: 6px 16px; } }
 @media (prefers-reduced-motion: reduce) { .kraak-status { animation: none; } }
+
+/* ============ Briefing ============ */
+#f-briefing { gap: 0; cursor: pointer; }
+.brief-alarm { margin: 0 0 4vh; padding: 8px 18px; border-radius: 99px; border: 1px solid rgba(255, 46, 77, .6); background: rgba(255, 46, 77, .12); font-family: var(--mono); font-weight: 800; font-size: 12px; letter-spacing: .28em; text-transform: uppercase; color: var(--rood); text-shadow: 0 0 12px rgba(255, 46, 77, .7); animation: alarmKnip 1s steps(2) infinite; }
+@keyframes alarmKnip { 50% { opacity: .45; } }
+.brief-regels { width: min(860px, 100%); display: grid; gap: 14px; text-align: center; }
+.brief-regel { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; font-size: clamp(22px, 3.6vw, 40px); line-height: 1.25; color: var(--goud); text-shadow: 0 0 30px rgba(255, 170, 70, .4); transition: opacity .6s, font-size .6s, color .6s; }
+.brief-regel.oud { opacity: .38; font-size: clamp(16px, 2.2vw, 24px); color: #e9dcc4; text-shadow: none; }
+.brief-regel.typt::after { content: ''; display: inline-block; width: .5em; height: .9em; margin-left: .08em; vertical-align: -.08em; background: var(--goud); animation: knip .8s steps(2) infinite; }
+.brief-afzender { margin: 4vh 0 0; font-family: var(--mono); font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: var(--cyaan); animation: faseIn .8s var(--uit) both; }
+.brief-knop { margin-top: 22px; animation: faseIn .8s var(--uit) .2s both, klopt 1.4s ease-in-out 1s infinite; }
+.brief-tip { position: absolute; bottom: max(28px, env(safe-area-inset-bottom)); left: 0; right: 0; margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--zwak); }
+@media (max-width: 600px) { .brief-regels { gap: 10px; } .brief-alarm { font-size: 10px; letter-spacing: .18em; } }
+@media (prefers-reduced-motion: reduce) { .brief-alarm { animation: none; } }

@@ -282,6 +282,7 @@
   document.addEventListener('keydown', function (e) {
     var fase = document.body.dataset.fase;
     if (fase === 'wacht') { wachtToets(e); return; }
+    if (fase === 'briefing') { if (!e.repeat) briefingVerder(e); return; }
     if (fase === 'wachtopen') return;
     if (fase === 'aftellen') { if (e.key !== 'Escape' && !e.repeat) energieTik(null); return; }
     if (fase !== 'invoer') return;
@@ -943,6 +944,65 @@
 
   // ============ Sneltoetsen voor de organisatie ============
   // ?code=<11 cijfers>&naar=eind  (of naar=kaart, naar=film, naar=gered, naar=aftellen)
+  // ============ Briefing ============
+  var briefing = { regels: [], i: 0, typt: false, klaar: false, timer: null, regelEl: null, tekst: '' };
+  function startBriefing() {
+    zetFase('briefing');
+    doelSnelheid = 0.25; intensiteit = 0.2; kleurRood = 0.25;
+    briefing.regels = (K.briefing && K.briefing.length) ? K.briefing : ['Veel succes.'];
+    briefing.i = 0; briefing.klaar = false;
+    $('briefRegels').innerHTML = '';
+    $('briefKnop').hidden = true; $('briefAfzender').hidden = true; $('briefTip').hidden = false;
+    setTimeout(volgendeRegel, bewegingUit ? 0 : 700);
+  }
+  function volgendeRegel() {
+    clearTimeout(briefing.timer);
+    if (briefing.i >= briefing.regels.length) { briefingKlaar(); return; }
+    var oud = $('briefRegels').querySelector('.brief-regel:not(.oud)');
+    if (oud) oud.classList.add('oud');
+    var p = document.createElement('p');
+    p.className = 'brief-regel typt';
+    $('briefRegels').appendChild(p);
+    briefing.regelEl = p; briefing.tekst = briefing.regels[briefing.i++]; briefing.typt = true;
+    klank.hart(false);
+    var n = 0;
+    (function typ() {
+      if (!briefing.typt) return;
+      n++;
+      p.textContent = briefing.tekst.slice(0, n);
+      if (n % 2 === 0) osc('square', 1100 + Math.random() * 300, 0, 0.02, 0.02);
+      if (n < briefing.tekst.length) briefing.timer = setTimeout(typ, bewegingUit ? 0 : 32);
+      else regelAf();
+    })();
+  }
+  function regelAf() {
+    briefing.typt = false;
+    briefing.regelEl.textContent = briefing.tekst;
+    briefing.regelEl.classList.remove('typt');
+    briefing.timer = setTimeout(volgendeRegel, bewegingUit ? 300 : 1300 + briefing.tekst.length * 18);
+  }
+  function briefingVerder() {
+    if (briefing.klaar) return;
+    audio();
+    clearTimeout(briefing.timer);
+    if (briefing.typt) regelAf(); else volgendeRegel();
+  }
+  function briefingKlaar() {
+    briefing.klaar = true;
+    var oud = $('briefRegels').querySelector('.brief-regel:not(.oud)');
+    if (K.briefingAfzender) { $('briefAfzender').textContent = K.briefingAfzender; $('briefAfzender').hidden = false; }
+    $('briefTip').hidden = true;
+    $('briefKnop').hidden = false;
+    $('briefKnop').focus({ preventScroll: true });
+    klank.vol();
+  }
+  $('f-briefing').addEventListener('click', function (e) { if (!e.target.closest('#briefKnop')) briefingVerder(); });
+  $('briefKnop').addEventListener('click', function () {
+    audio(); klank.knal(); flits();
+    kleurRood = 0; doelSnelheid = 0.06; intensiteit = 0;
+    zetFase('invoer'); tekenVakken();
+  });
+
   // ============ Wachtscherm: eindeloze kraakpoging ============
   // Draait tot het wachtwoord is getypt. Toetsenbord: gewoon typen (onzichtbaar).
   // Telefoon of tablet: tik 5 keer snel op de cijfers, dan verschijnt een veld.
@@ -978,7 +1038,7 @@
     setTimeout(function () {
       $('f-wacht').style.display = ''; $('f-wacht').classList.remove('open');
       doelSnelheid = 0.06; intensiteit = 0;
-      zetFase('invoer'); tekenVakken();
+      startBriefing();
     }, bewegingUit ? 200 : 2000);
   }
   function bouwKraker() {
@@ -1093,6 +1153,7 @@
       if (naar === 'eind') toonEind();
       else if (naar === 'film') { if (bron && bron.youtube) toonYoutube(bron.youtube); else uitslag(); }
       else if (naar === 'kaart') toonKaart(function () { if (bron && bron.youtube) toonYoutube(bron.youtube); else uitslag(); });
+      else if (naar === 'briefing') startBriefing();
       else if (naar === 'aftellen') startAftellen();
       else uitslag();
     });

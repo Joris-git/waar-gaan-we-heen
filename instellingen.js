@@ -35,6 +35,18 @@ window.KLUIS = {
   // Wijzigen: node tools/wachtwoord-instellen.mjs "nieuwwachtwoord". Leeg = geen wachtscherm.
   wachtwoordHash: '40ff1637c0153f7b167157509de4ab6bb905405d1d04d06823c0985c33a54990',
 
+  // Briefing na het wachtscherm. Elke regel verschijnt los, alsof hij wordt ingetikt. Pas gerust aan.
+  briefing: [
+    'Heren. Luister goed.',
+    'Achter deze kluis zit jullie bestemming. De hele wereld wacht. Nou ja, wij in ieder geval.',
+    'Ieder van jullie krijgt één envelop. In elke envelop zit één stukje van de code.',
+    'Alleen samen kraken jullie hem. Rekenen, overleggen, en niet stiekem afkijken.',
+    'Het gaat jullie lukken. Zelfs met deze apen bij elkaar.',
+    'Wij hebben vertrouwen in jullie. Het hangt wel helemaal van jullie af.',
+    'Veel succes. De klok tikt.'
+  ],
+  briefingAfzender: 'Missiecontrole · Joris en Nando',
+
   // Hoe lang het aftellen duurt, in seconden.
   aftellen: 15,
 
