@@ -75,6 +75,53 @@
     drone.o1.frequency.setTargetAtTime(toon, t, sec / 3); drone.o2.frequency.setTargetAtTime(toon * 1.011, t, sec / 3);
   }
   var klank = {
+    // ---- Feestgeluiden voor het eindscherm ----
+    kick: function (t) { osc('sine', 150, t || 0, 0.35, 0.9, 40); },
+    snare: function (t) { ruis(t || 0, 0.18, 4000, 1800, 0.5, 'highpass'); osc('triangle', 220, t || 0, 0.08, 0.15, 160); },
+    crash: function (t, lang) { ruis(t || 0, lang || 2.4, 9000, 4000, 0.32, 'highpass'); },
+    koper: function (fs, t, duur, vol) {
+      if (!audio()) return;
+      var st = nu() + (t || 0);
+      fs.forEach(function (f) {
+        [0, 4].forEach(function (cent) {
+          var o = ac.createOscillator(), flt = ac.createBiquadFilter(), g = ac.createGain();
+          o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = cent;
+          flt.type = 'lowpass'; flt.Q.value = 2;
+          flt.frequency.setValueAtTime(300, st); flt.frequency.exponentialRampToValueAtTime(3200, st + 0.12); flt.frequency.exponentialRampToValueAtTime(1400, st + duur);
+          g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(vol || 0.05, st + 0.06); g.gain.setValueAtTime(vol || 0.05, st + duur * 0.75); g.gain.exponentialRampToValueAtTime(0.0001, st + duur);
+          o.connect(flt).connect(g).connect(meester); o.start(st); o.stop(st + duur + 0.05);
+        });
+      });
+    },
+    pauk: function (t) { osc('sine', 98, t || 0, 0.6, 0.5, 60); ruis(t || 0, 0.12, 300, 120, 0.25, 'lowpass'); },
+    vuurpijl: function (t, hoog) {
+      var s0 = t || 0, f = hoog || 1;
+      osc('sine', 700 * f, s0, 0.55, 0.05, 2600 * f);                 // fluit omhoog
+      klank.kick(s0 + 0.55); ruis(s0 + 0.55, 0.4, 3000, 400, 0.6, 'lowpass');   // knal
+      for (var k = 0; k < 9; k++) ruis(s0 + 0.62 + k * 0.07 + Math.random() * 0.05, 0.06, 6000, 3000, 0.18, 'highpass'); // knisper
+      osc('triangle', 1046 * f, s0 + 0.55, 0.6, 0.06); osc('triangle', 1568 * f, s0 + 0.6, 0.5, 0.04);
+    },
+    bombast: function () {
+      klank.kick(0); osc('sine', 60, 0, 2.2, 0.9, 28); klank.crash(0, 3);
+      ruis(0, 0.8, 5000, 200, 0.7, 'lowpass');
+      [0.0, 0.12, 0.24, 0.36, 0.48].forEach(function (t) { klank.pauk(t); });
+      klank.koper([130.8, 164.8, 196, 261.6, 329.6], 0.05, 2.8, 0.045);   // C groot akkoord
+      osc('sine', 1046, 0.3, 1.6, 0.04); osc('sine', 1568, 0.4, 1.4, 0.03);
+    },
+    stoot: function () {
+      ruis(0, 0.5, 300, 6000, 0.25); klank.snare(0.05); klank.kick(0.05);
+      klank.koper([196, 246.9, 293.7, 392], 0.05, 0.7, 0.05);             // G stoot
+    },
+    finale: function () {
+      // Fanfare: C, F, G, groot C met drums, roffel en crash
+      var ak = [[130.8, 164.8, 196, 261.6], [174.6, 220, 261.6, 349.2], [196, 246.9, 293.7, 392], [261.6, 329.6, 392, 523.3, 659.3]];
+      klank.koper(ak[0], 0, 0.32, 0.05); klank.kick(0); klank.snare(0.16);
+      klank.koper(ak[1], 0.36, 0.32, 0.05); klank.kick(0.36); klank.snare(0.52);
+      klank.koper(ak[2], 0.72, 0.32, 0.05); klank.kick(0.72);
+      for (var r = 0; r < 8; r++) klank.snare(0.86 + r * 0.035);              // roffel
+      klank.koper(ak[3], 1.15, 3.2, 0.055); klank.kick(1.15); klank.crash(1.15, 3.5); osc('sine', 55, 1.15, 2, 0.7, 30);
+      klank.vuurpijl(1.6, 1); klank.vuurpijl(2.1, 1.25); klank.vuurpijl(2.5, 1.5);
+    },
     toets: function (i) { osc('square', 660 + i * 40, 0, 0.06, 0.05); osc('sine', 1320 + i * 80, 0.01, 0.08, 0.04); },
     wis: function () { osc('triangle', 300, 0, 0.12, 0.08, 150); },
     vol: function () { [523, 659, 784, 1047, 1319].forEach(function (f, i) { osc('triangle', f, i * 0.06, 0.4, 0.07); }); },
@@ -860,20 +907,35 @@
     if (st === 'tik') { k.classList.add('tik', 'uit'); label.textContent = 'Tik om te starten'; $('muziekStop').innerHTML = ICOON_SPEEL; return; }
     k.classList.add('fout'); label.textContent = 'Lukt niet hier'; $('muziekStop').hidden = true;
   }
+  var muziekFade = null;
+  function fadeIn(speler, doel, sec) {
+    clearInterval(muziekFade);
+    var v = 0, stap = doel / (sec * 1000 / 250);
+    try { speler.setVolume(0); } catch (e) { /* */ }
+    muziekFade = setInterval(function () {
+      v = Math.min(doel, v + stap);
+      try { speler.setVolume(Math.round(v)); } catch (e) { /* */ }
+      if (v >= doel) clearInterval(muziekFade);
+    }, 250);
+  }
   function startMuziek() {
     var m = K.eindMuziek;
     if (!m || !m.youtube) return;
+    var doel = m.volume == null ? 70 : m.volume, sec = m.fadeIn == null ? 10 : m.fadeIn;
     $('muziek').hidden = false;
     muziekStatus('laadt');
     laadYtApi(function () {
-      if (muziekSpeler) { try { muziekSpeler.seekTo(m.start || 0); muziekSpeler.playVideo(); } catch (e) { /* */ } return; }
+      if (muziekSpeler) { try { muziekSpeler.seekTo(m.start || 0); muziekSpeler.unMute(); muziekSpeler.playVideo(); fadeIn(muziekSpeler, doel, sec); } catch (e) { /* */ } return; }
       muziekSpeler = new YT.Player('muziekSpeler', {
         host: 'https://www.youtube-nocookie.com',
         videoId: m.youtube, width: '100%', height: '100%',
         playerVars: { autoplay: 1, start: m.start || 0, playsinline: 1, rel: 0, modestbranding: 1, controls: 1 },
         events: {
-          onReady: function (e) { try { e.target.unMute(); e.target.setVolume(m.volume == null ? 70 : m.volume); e.target.playVideo(); } catch (x) { /* */ } },
-          onStateChange: function (e) { if (e.data === 1) muziekStatus('speelt'); else if (e.data === 2) muziekStatus('uit'); },
+          onReady: function (e) { try { e.target.unMute(); e.target.setVolume(0); e.target.playVideo(); } catch (x) { /* */ } },
+          onStateChange: function (e) {
+            if (e.data === 1) { muziekStatus('speelt'); if (!muziekSpeler._gefade) { muziekSpeler._gefade = true; fadeIn(muziekSpeler, doel, sec); } }
+            else if (e.data === 2) muziekStatus('uit');
+          },
           onError: function () { muziekStatus('fout'); }
         }
       });
@@ -884,7 +946,7 @@
     }, function () { muziekStatus('fout'); });
   }
   function speelMuziek() { try { muziekSpeler.unMute(); muziekSpeler.playVideo(); } catch (e) { /* */ } }
-  function stopMuziek() { try { if (muziekSpeler) muziekSpeler.pauseVideo(); } catch (e) { /* */ } if (!$('muziek').hidden) muziekStatus('uit'); }
+  function stopMuziek() { clearInterval(muziekFade); try { if (muziekSpeler) muziekSpeler.pauseVideo(); } catch (e) { /* */ } if (!$('muziek').hidden) muziekStatus('uit'); }
   $('muziek').addEventListener('click', function (e) {
     if (e.target.closest('#muziekStop') || !$('muziek').classList.contains('tik')) return;
     speelMuziek();
@@ -933,7 +995,6 @@
     $('eindMaps').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.lat.toFixed(4) + ',' + c.lon.toFixed(4));
     // Alles verbergen, behalve het land
     sec.querySelectorAll('.eind-stap').forEach(function (el) { el.classList.remove('zicht'); });
-    $('muziek').hidden = true;
     zetFase('eind');
     sec.scrollTop = 0;
     $('tKluis').textContent = 'OPEN';
@@ -949,30 +1010,34 @@
     sec.classList.add('solo');
     void land.offsetWidth;
     land.classList.add('in');
-    flits('goud'); klank.zacht(); tril([60, 40, 120]);
-    na(function () { vonken(innerWidth / 2, innerHeight / 2, 50); }, 500);
+    flits('goud'); klank.bombast(); tril([120, 60, 200]);
+    startMuziek();
+    na(function () { vonken(innerWidth / 2, innerHeight / 2, 70); }, 150);
+    na(function () { vonken(innerWidth * 0.3, innerHeight * 0.4, 40); vonken(innerWidth * 0.7, innerHeight * 0.4, 40); }, 600);
     // Stap 2: land schuift omhoog, regio en datum verschijnen
-    na(function () { sec.classList.remove('solo'); $('eindBoven').classList.add('zicht'); osc('sine', 392, 0, 0.6, 0.05); }, 2600);
-    na(function () { $('eindRegio').classList.add('zicht'); osc('sine', 523, 0, 0.5, 0.05); }, 3500);
-    na(function () { $('eindDatum').classList.add('zicht'); osc('sine', 659, 0, 0.5, 0.05); }, 4000);
+    na(function () { sec.classList.remove('solo'); $('eindBoven').classList.add('zicht'); klank.stoot(); }, 2600);
+    na(function () { $('eindRegio').classList.add('zicht'); klank.kick(0); klank.koper([261.6, 329.6, 392], 0, 0.45, 0.04); }, 3500);
+    na(function () { $('eindDatum').classList.add('zicht'); klank.kick(0); klank.snare(0.08); klank.koper([329.6, 392, 523.3], 0, 0.45, 0.04); }, 4000);
     // Stap 3: de onderdelen van de reis, één voor één
     var items = Array.prototype.slice.call(ol.children), t = 4900;
     items.forEach(function (li, i) {
       na(function () {
         li.classList.add('zicht');
         inBeeld(li);
-        osc('triangle', 700 + i * 60, 0, 0.12, 0.05);
+        klank.vuurpijl(0, 1 + i * 0.08);
         var rr = li.getBoundingClientRect();
-        vonken(rr.left + 24, rr.top + rr.height / 2, 8);
+        vonken(rr.left + 40, rr.top + rr.height / 2, 14);
+        setTimeout(function () { vonken(innerWidth * (0.1 + Math.random() * 0.8), innerHeight * (0.1 + Math.random() * 0.4), 26); }, 550);
       }, t + i * 850);
     });
     t += items.length * 850 + 500;
     // Stap 4: slotzin, knoppen en muziek
-    na(function () { $('eindSlot').classList.add('zicht'); inBeeld($('eindSlot')); klank.vol(); vonken(innerWidth / 2, innerHeight * 0.75, 40); }, t);
-    na(function () { sec.querySelector('.eind-acties').classList.add('zicht'); startMuziek(); setTimeout(function () { inBeeld($('muziek')); }, 300); }, t + 900);
+    na(function () { $('eindSlot').classList.add('zicht'); inBeeld($('eindSlot')); klank.finale(); flits('goud'); tril([80, 40, 80, 40, 300]); vonken(innerWidth / 2, innerHeight * 0.75, 60); }, t);
+    na(function () { sec.querySelector('.eind-acties').classList.add('zicht'); setTimeout(function () { inBeeld($('muziek')); }, 300); }, t + 900);
     var salvo = function (k) {
-      if (document.body.dataset.fase !== 'eind' || k > 5) return;
-      vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 30);
+      if (document.body.dataset.fase !== 'eind' || k > 9) return;
+      vonken(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.2 + Math.random() * 0.5), 36);
+      if (k % 3 === 2) klank.vuurpijl(0, 1.2 + Math.random() * 0.5);
       na(function () { salvo(k + 1); }, 500 + Math.random() * 500);
     };
     na(function () { salvo(0); }, t + 300);

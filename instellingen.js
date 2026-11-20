@@ -17,8 +17,8 @@ window.KLUIS = {
   // Muziek op het eindscherm (YouTube). start = seconde waarop het nummer begint, volume 0 t/m 100.
   // Zet youtube op '' om geen muziek te spelen.
   // Muziek op het eindscherm (YouTube). Reclame vooraf kan YouTube zelf toevoegen; overslaan kan in de speler.
-  // start = seconde waarop het nummer begint, volume 0 t/m 100. youtube: '' = geen muziek.
-  eindMuziek: { youtube: 'dLhFDYQHDQY', titel: 'Hangover', start: 0, volume: 70 },
+  // start = seconde waarop het nummer begint, volume 0 t/m 100, fadeIn = seconden tot volle sterkte. youtube: '' = geen muziek.
+  eindMuziek: { youtube: 'dLhFDYQHDQY', titel: 'Hangover', start: 0, volume: 70, fadeIn: 10 },
 
   // Rondvlucht over de kaart voordat de pin valt. De eerste plek is het vertrekpunt.
   route: [
